@@ -46,17 +46,22 @@ const PAGE_GAP = 64; // verticale ruimte tussen opeenvolgende pagina's
 
 const isFrame = (el: { id: string }) => el.id.startsWith(FRAME_PREFIX);
 const countFrames = (els: Elements) => els.filter(isFrame).length;
+const pageTop = (index: number) => index * (PAGE_H + PAGE_GAP);
 
-/** Bouwt het vergrendelde kader voor pagina `index` (gestapeld onder elkaar). */
-async function buildFrame(index: number): Promise<OrderedExcalidrawElement | null> {
+/**
+ * Bouwt één pagina (vergrendeld kader + "Pagina N"-label) voor `index`.
+ * Pagina's stapelen verticaal onder elkaar.
+ */
+async function buildPage(index: number): Promise<OrderedExcalidrawElement[]> {
   try {
     const { convertToExcalidrawElements } = await import("@excalidraw/excalidraw");
-    const [el] = convertToExcalidrawElements([
+    const y = pageTop(index);
+    const els = convertToExcalidrawElements([
       {
         type: "rectangle",
         id: `${FRAME_PREFIX}-${index}`,
         x: 0,
-        y: index * (PAGE_H + PAGE_GAP),
+        y,
         width: PAGE_W,
         height: PAGE_H,
         strokeColor: "#cbd5e1",
@@ -65,10 +70,20 @@ async function buildFrame(index: number): Promise<OrderedExcalidrawElement | nul
         roughness: 0,
         locked: true,
       },
+      {
+        type: "text",
+        id: `page-label-${index}`,
+        x: 16,
+        y: y + 14,
+        text: `Pagina ${index + 1}`,
+        fontSize: 16,
+        strokeColor: "#cbd5e1",
+        locked: true,
+      },
     ] as never);
-    return el as OrderedExcalidrawElement;
+    return els as OrderedExcalidrawElement[];
   } catch {
-    return null;
+    return [];
   }
 }
 
@@ -91,7 +106,7 @@ export default function Whiteboard({ roomId }: Props) {
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Actief-bord dat via remote kwam maar nog niet bekend was (wacht op meta).
   const pendingActive = useRef<string | null>(null);
-  const frameRef = useRef<OrderedExcalidrawElement | null>(null);
+  const frameRef = useRef<OrderedExcalidrawElement[]>([]);
 
   const [boards, setBoards] = useState<Board[]>(wb.current.boards);
   const [activeId, setActiveId] = useState(wb.current.activeBoardId);
@@ -100,16 +115,16 @@ export default function Whiteboard({ roomId }: Props) {
 
   // Zorgt dat een bord minstens één paginakader bevat (vooraan, vergrendeld).
   const ensureFrame = useCallback((els: Elements): Elements => {
-    const frame = frameRef.current;
-    if (!frame || els.some(isFrame)) return els;
-    return [frame, ...els];
+    const page = frameRef.current;
+    if (!page.length || els.some(isFrame)) return els;
+    return [...page, ...els];
   }, []);
 
   // ── Initieel: kader bouwen + borden laden uit localStorage ──
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      frameRef.current = await buildFrame(0);
+      frameRef.current = await buildPage(0);
       if (cancelled) return;
       const loaded = loadWB(roomId);
       for (const b of loaded.boards) {
@@ -185,26 +200,27 @@ export default function Whiteboard({ roomId }: Props) {
     switchBoard(id);
   }, [switchBoard, syncMeta, ensureFrame]);
 
-  // Voegt een nieuwe pagina (grijs kader) toe ONDER de laatste, in hetzelfde bord.
+  // Voegt een nieuwe pagina (grijs kader + label) toe ONDER de laatste.
   const addPage = useCallback(async () => {
     const api = apiRef.current;
     if (!api) return;
     const current = api.getSceneElements();
-    const frame = await buildFrame(countFrames(current));
-    if (!frame) return;
-    const next = [...current, frame];
+    const pageEls = await buildPage(countFrames(current));
+    if (!pageEls.length) return;
+    const next = [...current, ...pageEls];
     wb.current.data[wb.current.activeBoardId] = next;
     applyToCanvas(next);
     send("scene", { boardId: wb.current.activeBoardId, elements: next });
     persist();
     // Scroll naar de nieuwe (lege) pagina zodat je er meteen op verder schrijft.
-    requestAnimationFrame(() => {
-      apiRef.current?.scrollToContent([frame] as never, {
+    const rect = pageEls.find(isFrame) ?? pageEls[0];
+    setTimeout(() => {
+      apiRef.current?.scrollToContent(rect as never, {
         fitToContent: true,
         animate: true,
-        duration: 300,
+        duration: 400,
       });
-    });
+    }, 60);
   }, [applyToCanvas, persist, send]);
 
   const renameBoard = useCallback(
@@ -390,7 +406,7 @@ export default function Whiteboard({ roomId }: Props) {
           <button
             onClick={addPage}
             title="Voeg een pagina toe onder de huidige"
-            className="absolute bottom-20 left-3 z-20 flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-lg ring-1 ring-slate-200 hover:bg-slate-50"
+            className="absolute bottom-20 left-3 z-30 flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-lg ring-1 ring-slate-200 hover:bg-slate-50"
           >
             <span className="text-base">＋</span> Pagina
           </button>
