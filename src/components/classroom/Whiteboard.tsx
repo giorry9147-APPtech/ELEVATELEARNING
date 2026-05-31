@@ -7,6 +7,7 @@ import type {
   ExcalidrawImperativeAPI,
   ExcalidrawProps,
 } from "@excalidraw/excalidraw/types";
+import type { OrderedExcalidrawElement } from "@excalidraw/excalidraw/element/types";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import { config } from "@/lib/config";
@@ -35,6 +36,36 @@ const Excalidraw = dynamic(
   },
 ) as ComponentType<ExcalidrawProps>;
 
+// Vast paginakader (16:9) dat op elk bord toont waar de "pagina" begint/eindigt.
+const FRAME_ID = "page-frame";
+const PAGE_W = 1280;
+const PAGE_H = 720;
+
+/** Bouwt het vergrendelde paginakader via Excalidraw's eigen element-helper. */
+async function buildFrame(): Promise<OrderedExcalidrawElement | null> {
+  try {
+    const { convertToExcalidrawElements } = await import("@excalidraw/excalidraw");
+    const [el] = convertToExcalidrawElements([
+      {
+        type: "rectangle",
+        id: FRAME_ID,
+        x: 0,
+        y: 0,
+        width: PAGE_W,
+        height: PAGE_H,
+        strokeColor: "#cbd5e1",
+        backgroundColor: "transparent",
+        strokeWidth: 2,
+        roughness: 0,
+        locked: true,
+      },
+    ] as never);
+    return el as OrderedExcalidrawElement;
+  } catch {
+    return null;
+  }
+}
+
 type Props = { roomId: string };
 
 /**
@@ -54,18 +85,39 @@ export default function Whiteboard({ roomId }: Props) {
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Actief-bord dat via remote kwam maar nog niet bekend was (wacht op meta).
   const pendingActive = useRef<string | null>(null);
+  const frameRef = useRef<OrderedExcalidrawElement | null>(null);
 
   const [boards, setBoards] = useState<Board[]>(wb.current.boards);
   const [activeId, setActiveId] = useState(wb.current.activeBoardId);
   const [synced, setSynced] = useState(false);
+  const [ready, setReady] = useState(false);
 
-  // ── Initieel laden uit localStorage ──
+  // Zorgt dat een bord het paginakader bevat (vooraan, vergrendeld).
+  const ensureFrame = useCallback((els: Elements): Elements => {
+    const frame = frameRef.current;
+    if (!frame || els.some((e) => e.id === FRAME_ID)) return els;
+    return [frame, ...els];
+  }, []);
+
+  // ── Initieel: kader bouwen + borden laden uit localStorage ──
   useEffect(() => {
-    const loaded = loadWB(roomId);
-    wb.current = loaded;
-    setBoards(loaded.boards);
-    setActiveId(loaded.activeBoardId);
-  }, [roomId]);
+    let cancelled = false;
+    (async () => {
+      frameRef.current = await buildFrame();
+      if (cancelled) return;
+      const loaded = loadWB(roomId);
+      for (const b of loaded.boards) {
+        loaded.data[b.id] = ensureFrame(loaded.data[b.id] ?? []);
+      }
+      wb.current = loaded;
+      setBoards(loaded.boards);
+      setActiveId(loaded.activeBoardId);
+      setReady(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [roomId, ensureFrame]);
 
   const persist = useCallback(() => {
     if (saveTimer.current) clearTimeout(saveTimer.current);
@@ -112,10 +164,10 @@ export default function Whiteboard({ roomId }: Props) {
   const addBoard = useCallback(() => {
     const id = newBoardId();
     wb.current.boards.push({ id, name: `Bord ${wb.current.boards.length + 1}` });
-    wb.current.data[id] = [];
+    wb.current.data[id] = ensureFrame([]);
     syncMeta();
     switchBoard(id);
-  }, [switchBoard, syncMeta]);
+  }, [switchBoard, syncMeta, ensureFrame]);
 
   const renameBoard = useCallback(
     (id: string) => {
@@ -173,7 +225,8 @@ export default function Whiteboard({ roomId }: Props) {
         const map = new Map(wb.current.boards.map((b) => [b.id, b]));
         for (const b of remoteBoards) map.set(b.id, b);
         wb.current.boards = remoteBoards.map((b) => map.get(b.id)!);
-        for (const b of wb.current.boards) if (!wb.current.data[b.id]) wb.current.data[b.id] = [];
+        for (const b of wb.current.boards)
+          if (!wb.current.data[b.id]) wb.current.data[b.id] = ensureFrame([]);
         setBoards([...wb.current.boards]);
         if (pendingActive.current && map.has(pendingActive.current)) {
           const id = pendingActive.current;
@@ -202,6 +255,9 @@ export default function Whiteboard({ roomId }: Props) {
             );
           }
         }
+        // Zorg dat elk (ook overgenomen) bord het paginakader heeft.
+        for (const b of wb.current.boards)
+          wb.current.data[b.id] = ensureFrame(wb.current.data[b.id] ?? []);
         setBoards([...wb.current.boards]);
         setActiveId(wb.current.activeBoardId);
         applyToCanvas(wb.current.data[wb.current.activeBoardId] ?? []);
@@ -276,13 +332,22 @@ export default function Whiteboard({ roomId }: Props) {
 
       {/* Canvas */}
       <div className="relative min-h-0 flex-1">
-        <Excalidraw
-          excalidrawAPI={(api) => (apiRef.current = api)}
-          initialData={{ elements: wb.current.data[wb.current.activeBoardId] as never }}
-          onChange={handleChange}
-          langCode="nl-NL"
-          UIOptions={{ canvasActions: { loadScene: true, saveToActiveFile: false } }}
-        />
+        {ready ? (
+          <Excalidraw
+            excalidrawAPI={(api) => (apiRef.current = api)}
+            initialData={{
+              elements: wb.current.data[wb.current.activeBoardId] as never,
+              scrollToContent: true,
+            }}
+            onChange={handleChange}
+            langCode="nl-NL"
+            UIOptions={{ canvasActions: { loadScene: true, saveToActiveFile: false } }}
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center text-slate-400">
+            Whiteboard laden…
+          </div>
+        )}
         {config.supabase.enabled && (
           <span
             className={`pointer-events-none absolute right-3 top-3 z-10 rounded-full px-2 py-0.5 text-xs font-medium ${
