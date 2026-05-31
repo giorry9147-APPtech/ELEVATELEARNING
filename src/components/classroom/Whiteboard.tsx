@@ -37,21 +37,26 @@ const Excalidraw = dynamic(
   },
 ) as ComponentType<ExcalidrawProps>;
 
-// Vast paginakader (16:9) dat op elk bord toont waar de "pagina" begint/eindigt.
-const FRAME_ID = "page-frame";
+// Paginakaders (16:9) tonen waar elke "pagina" begint/eindigt. Een bord kan
+// meerdere pagina's onder elkaar hebben (id-prefix "page-frame-<index>").
+const FRAME_PREFIX = "page-frame";
 const PAGE_W = 1280;
 const PAGE_H = 720;
+const PAGE_GAP = 64; // verticale ruimte tussen opeenvolgende pagina's
 
-/** Bouwt het vergrendelde paginakader via Excalidraw's eigen element-helper. */
-async function buildFrame(): Promise<OrderedExcalidrawElement | null> {
+const isFrame = (el: { id: string }) => el.id.startsWith(FRAME_PREFIX);
+const countFrames = (els: Elements) => els.filter(isFrame).length;
+
+/** Bouwt het vergrendelde kader voor pagina `index` (gestapeld onder elkaar). */
+async function buildFrame(index: number): Promise<OrderedExcalidrawElement | null> {
   try {
     const { convertToExcalidrawElements } = await import("@excalidraw/excalidraw");
     const [el] = convertToExcalidrawElements([
       {
         type: "rectangle",
-        id: FRAME_ID,
+        id: `${FRAME_PREFIX}-${index}`,
         x: 0,
-        y: 0,
+        y: index * (PAGE_H + PAGE_GAP),
         width: PAGE_W,
         height: PAGE_H,
         strokeColor: "#cbd5e1",
@@ -93,10 +98,10 @@ export default function Whiteboard({ roomId }: Props) {
   const [synced, setSynced] = useState(false);
   const [ready, setReady] = useState(false);
 
-  // Zorgt dat een bord het paginakader bevat (vooraan, vergrendeld).
+  // Zorgt dat een bord minstens één paginakader bevat (vooraan, vergrendeld).
   const ensureFrame = useCallback((els: Elements): Elements => {
     const frame = frameRef.current;
-    if (!frame || els.some((e) => e.id === FRAME_ID)) return els;
+    if (!frame || els.some(isFrame)) return els;
     return [frame, ...els];
   }, []);
 
@@ -104,7 +109,7 @@ export default function Whiteboard({ roomId }: Props) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      frameRef.current = await buildFrame();
+      frameRef.current = await buildFrame(0);
       if (cancelled) return;
       const loaded = loadWB(roomId);
       for (const b of loaded.boards) {
@@ -179,6 +184,28 @@ export default function Whiteboard({ roomId }: Props) {
     syncMeta();
     switchBoard(id);
   }, [switchBoard, syncMeta, ensureFrame]);
+
+  // Voegt een nieuwe pagina (grijs kader) toe ONDER de laatste, in hetzelfde bord.
+  const addPage = useCallback(async () => {
+    const api = apiRef.current;
+    if (!api) return;
+    const current = api.getSceneElements();
+    const frame = await buildFrame(countFrames(current));
+    if (!frame) return;
+    const next = [...current, frame];
+    wb.current.data[wb.current.activeBoardId] = next;
+    applyToCanvas(next);
+    send("scene", { boardId: wb.current.activeBoardId, elements: next });
+    persist();
+    // Scroll naar de nieuwe (lege) pagina zodat je er meteen op verder schrijft.
+    requestAnimationFrame(() => {
+      apiRef.current?.scrollToContent([frame] as never, {
+        fitToContent: true,
+        animate: true,
+        duration: 300,
+      });
+    });
+  }, [applyToCanvas, persist, send]);
 
   const renameBoard = useCallback(
     (id: string) => {
@@ -358,6 +385,15 @@ export default function Whiteboard({ roomId }: Props) {
           <div className="flex h-full items-center justify-center text-slate-400">
             Whiteboard laden…
           </div>
+        )}
+        {ready && (
+          <button
+            onClick={addPage}
+            title="Voeg een pagina toe onder de huidige"
+            className="absolute bottom-20 left-3 z-20 flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-lg ring-1 ring-slate-200 hover:bg-slate-50"
+          >
+            <span className="text-base">＋</span> Pagina
+          </button>
         )}
         {ready && <MathKeyboard />}
         {config.supabase.enabled && (
