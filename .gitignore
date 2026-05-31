@@ -32,6 +32,11 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# behalve het voorbeeldbestand (bevat geen secrets)
+!.env.example
+
+# bevat geheime keys — nooit committen
+SECURITY.md
 
 # vercel
 .vercel
