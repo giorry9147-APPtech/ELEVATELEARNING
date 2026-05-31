@@ -11,6 +11,7 @@ import type { OrderedExcalidrawElement } from "@excalidraw/excalidraw/element/ty
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import { config } from "@/lib/config";
+import MathKeyboard from "./MathKeyboard";
 import {
   defaultState,
   isEmptyState,
@@ -348,6 +349,7 @@ export default function Whiteboard({ roomId }: Props) {
             Whiteboard laden…
           </div>
         )}
+        {ready && <MathKeyboard />}
         {config.supabase.enabled && (
           <span
             className={`pointer-events-none absolute right-3 top-3 z-10 rounded-full px-2 py-0.5 text-xs font-medium ${
