@@ -34,13 +34,21 @@ export async function POST(request: Request) {
   // Daily-roomnamen: alleen [A-Za-z0-9_-]. Maak het roomId veilig.
   const name = roomId.replace(/[^A-Za-z0-9_-]/g, "-").slice(0, 40);
   const roomUrl = `https://${domain}/${name}`;
+  const headers = { Authorization: `Bearer ${apiKey}` };
 
-  const res = await fetch("https://api.daily.co/v1/rooms", {
+  // Bestaat de room al? Dan is de deterministische URL meteen geldig.
+  // (Cruciaal: zo belandt de 2e deelnemer in DEZELFDE room, niet in de fallback.)
+  const existing = await fetch(`https://api.daily.co/v1/rooms/${name}`, {
+    headers,
+  });
+  if (existing.ok) {
+    return NextResponse.json({ url: roomUrl, shared: false });
+  }
+
+  // Bestaat nog niet → aanmaken.
+  const created = await fetch("https://api.daily.co/v1/rooms", {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
+    headers: { ...headers, "Content-Type": "application/json" },
     body: JSON.stringify({
       name,
       privacy: "public",
@@ -52,16 +60,22 @@ export async function POST(request: Request) {
       },
     }),
   });
-
-  // 200 = nieuw aangemaakt; 409 = bestond al → in beide gevallen is de URL geldig.
-  if (res.ok || res.status === 409) {
+  if (created.ok) {
     return NextResponse.json({ url: roomUrl, shared: false });
   }
 
-  // Bij een andere fout: val terug op de gedeelde room zodat de les doorgaat.
+  // Race-conditie: net door iemand anders aangemaakt tussen GET en POST?
+  const recheck = await fetch(`https://api.daily.co/v1/rooms/${name}`, {
+    headers,
+  });
+  if (recheck.ok) {
+    return NextResponse.json({ url: roomUrl, shared: false });
+  }
+
+  // Echte fout: val terug op de gedeelde room zodat de les doorgaat.
   return NextResponse.json({
     url: config.daily.roomUrl || null,
     shared: true,
-    warning: `daily_api_${res.status}`,
+    warning: `daily_api_${created.status}`,
   });
 }
