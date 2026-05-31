@@ -44,7 +44,20 @@ const PAGE_W = 1280;
 const PAGE_H = 720;
 const PAGE_GAP = 64; // verticale ruimte tussen opeenvolgende pagina's
 
-const isFrame = (el: { id: string }) => el.id.startsWith(FRAME_PREFIX);
+// Een paginakader: herkenbaar aan z'n id-prefix óf aan z'n vorm (vergrendelde
+// 1280×720-rechthoek) — die laatste vangt ook borden van vóór deze fix.
+const isFrame = (el: {
+  id: string;
+  type?: string;
+  locked?: boolean;
+  width?: number;
+  height?: number;
+}) =>
+  el.id.startsWith(FRAME_PREFIX) ||
+  (el.type === "rectangle" &&
+    !!el.locked &&
+    Math.round(el.width ?? 0) === PAGE_W &&
+    Math.round(el.height ?? 0) === PAGE_H);
 const countFrames = (els: Elements) => els.filter(isFrame).length;
 const pageTop = (index: number) => index * (PAGE_H + PAGE_GAP);
 
@@ -80,7 +93,9 @@ async function buildPage(index: number): Promise<OrderedExcalidrawElement[]> {
         strokeColor: "#cbd5e1",
         locked: true,
       },
-    ] as never);
+    ] as never,
+    // Behoud onze eigen ids (anders worden ze geregenereerd → detectie faalt).
+    { regenerateIds: false });
     return els as OrderedExcalidrawElement[];
   } catch {
     return [];
