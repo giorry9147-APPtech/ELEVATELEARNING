@@ -146,14 +146,24 @@ export default function Whiteboard({ roomId }: Props) {
         // Bewaar huidige tekening voordat we wisselen.
         wb.current.data[wb.current.activeBoardId] = api.getSceneElements();
       }
-      if (!wb.current.data[id]) wb.current.data[id] = [];
+      if (!wb.current.data[id]) wb.current.data[id] = ensureFrame([]);
       wb.current.activeBoardId = id;
       setActiveId(id);
-      applyToCanvas(wb.current.data[id]);
+      const elements = wb.current.data[id];
+      applyToCanvas(elements);
+      // Centreer op de pagina zodat het grijze kader meteen in beeld is
+      // ("volgende bladzijde"-gevoel), ook als je elders had gescrold/gezoomd.
+      requestAnimationFrame(() => {
+        apiRef.current?.scrollToContent(elements as never, {
+          fitToContent: true,
+          animate: true,
+          duration: 300,
+        });
+      });
       persist();
       if (!silent) send("active", { boardId: id });
     },
-    [applyToCanvas, persist, send],
+    [applyToCanvas, ensureFrame, persist, send],
   );
 
   const syncMeta = useCallback(() => {
