@@ -12,6 +12,8 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import { config } from "@/lib/config";
 import MathKeyboard from "./MathKeyboard";
+import { useAuth } from "@/components/AuthProvider";
+import { loadWBRemote, saveWBRemote } from "@/lib/whiteboard-store";
 import {
   defaultState,
   isEmptyState,
@@ -111,6 +113,13 @@ type Props = { roomId: string };
  *   zodat typen van de één de wijzigingen van de ander niet overschrijft.
  */
 export default function Whiteboard({ roomId }: Props) {
+  const { user, loading: authLoading } = useAuth();
+  // Ref zodat throttled callbacks altijd de actuele auth-status zien.
+  const userRef = useRef(user);
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
+
   const apiRef = useRef<ExcalidrawImperativeAPI | null>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
   // Bron van waarheid voor borden + elementen (los van React-render).
@@ -135,13 +144,20 @@ export default function Whiteboard({ roomId }: Props) {
     return [...page, ...els];
   }, []);
 
-  // ── Initieel: kader bouwen + borden laden uit localStorage ──
+  // ── Initieel: kader bouwen + borden laden ──
+  // Ingelogde docent → uit Supabase (terug op elk apparaat). Anders localStorage.
+  // Wacht tot de auth-status bekend is zodat we de juiste bron kiezen.
+  const initRef = useRef(false);
   useEffect(() => {
+    if (authLoading || initRef.current) return;
+    initRef.current = true;
     let cancelled = false;
     (async () => {
       frameRef.current = await buildPage(0);
       if (cancelled) return;
-      const loaded = loadWB(roomId);
+      let loaded: WBState | null = null;
+      if (user) loaded = await loadWBRemote(roomId);
+      if (!loaded) loaded = loadWB(roomId); // localStorage of default
       for (const b of loaded.boards) {
         loaded.data[b.id] = ensureFrame(loaded.data[b.id] ?? []);
       }
@@ -149,15 +165,20 @@ export default function Whiteboard({ roomId }: Props) {
       setBoards(loaded.boards);
       setActiveId(loaded.activeBoardId);
       setReady(true);
+      // Ingelogd maar nog niets in de DB? Migreer de huidige (localStorage) staat.
+      if (user && !isEmptyState(loaded)) saveWBRemote(roomId, loaded);
     })();
     return () => {
       cancelled = true;
     };
-  }, [roomId, ensureFrame]);
+  }, [authLoading, user, roomId, ensureFrame]);
 
   const persist = useCallback(() => {
     if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(() => saveWB(roomId, wb.current), 400);
+    saveTimer.current = setTimeout(() => {
+      saveWB(roomId, wb.current); // lokale cache
+      if (userRef.current) saveWBRemote(roomId, wb.current); // tenant-DB
+    }, 400);
   }, [roomId]);
 
   // Past elementen toe op de canvas zonder een eigen broadcast te triggeren.
