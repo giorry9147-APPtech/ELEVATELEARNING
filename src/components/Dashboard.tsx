@@ -4,11 +4,13 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { roomUrl, type RecentSession } from "@/lib/rooms";
 import { listSessions, deleteSession } from "@/lib/sessions";
+import { getCurrentOrg, type Org } from "@/lib/org";
 import { useAuth } from "@/components/AuthProvider";
 
 export default function Dashboard() {
   const { user, loading, enabled, signOut } = useAuth();
   const [sessions, setSessions] = useState<RecentSession[]>([]);
+  const [org, setOrg] = useState<Org | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
   const [busy, setBusy] = useState(true);
 
@@ -19,6 +21,7 @@ export default function Dashboard() {
       setSessions(s);
       setBusy(false);
     });
+    if (user) getCurrentOrg().then(setOrg);
   }, [loading, user]);
 
   const remove = async (roomId: string) => {
@@ -67,7 +70,15 @@ export default function Dashboard() {
       </header>
 
       <div className="mx-auto max-w-4xl px-6 py-8">
-        <h1 className="text-2xl font-bold text-slate-900">Mijn lessen</h1>
+        {org && (
+          <p className="text-sm font-medium text-sky-600">
+            🏫 {org.name}
+            <span className="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-normal text-slate-500">
+              {org.role}
+            </span>
+          </p>
+        )}
+        <h1 className="mt-1 text-2xl font-bold text-slate-900">Mijn lessen</h1>
         {!enabled && (
           <p className="mt-1 text-sm text-amber-600">
             Lokale modus — deze lijst staat alleen op dit apparaat.

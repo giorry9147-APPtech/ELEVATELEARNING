@@ -24,10 +24,13 @@ export async function createSession(params: {
   const supabase = createClient();
 
   if (supabase && userId) {
+    // Koppel de sessie aan de tenant van de docent (maakt 'm aan indien nodig).
+    const { data: orgId } = await supabase.rpc("ensure_my_org");
     const { error } = await supabase.from("sessions").insert({
       room_id: roomId,
       title,
       teacher_id: userId,
+      org_id: orgId ?? null,
     });
     if (!error) return;
     // Bij fout: val terug op lokaal zodat de gebruiker niet vastloopt.
