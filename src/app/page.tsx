@@ -1,3 +1,4 @@
+import Link from "next/link";
 import SessionLauncher from "@/components/SessionLauncher";
 import LandingNav from "@/components/LandingNav";
 import { BrandMark } from "@/components/BrandingProvider";
@@ -54,7 +55,13 @@ export default function Home() {
       </section>
 
       <footer className="border-t border-slate-200 py-6 text-center text-sm text-slate-400">
-        Bijlesplatform · demo-fase · gebouwd met Next.js, Excalidraw &amp; Daily
+        <nav className="mb-2 flex justify-center gap-4">
+          <Link href="/prijzen" className="hover:text-slate-600">Prijzen</Link>
+          <Link href="/voorwaarden" className="hover:text-slate-600">Voorwaarden</Link>
+          <Link href="/privacy" className="hover:text-slate-600">Privacy</Link>
+          <Link href="/cookies" className="hover:text-slate-600">Cookies</Link>
+        </nav>
+        Bijles · gebouwd met Next.js, Excalidraw &amp; Daily
       </footer>
     </main>
   );
