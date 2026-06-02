@@ -8,6 +8,9 @@ export default function LandingNav() {
 
   return (
     <nav className="flex items-center gap-4 text-sm">
+      <Link href="/prijzen" className="text-slate-600 hover:text-slate-900">
+        Prijzen
+      </Link>
       <Link href="/dashboard" className="text-slate-600 hover:text-slate-900">
         Mijn lessen
       </Link>
