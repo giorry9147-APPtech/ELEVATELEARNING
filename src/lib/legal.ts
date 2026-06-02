@@ -6,13 +6,14 @@
  * advies. Laat ze vóór commercieel gebruik nakijken door een jurist.
  */
 export const LEGAL = {
-  companyName: "[Bedrijfsnaam]",
+  companyName: "[Bedrijfsnaam — juridische entiteit bij KvK]",
   tradeName: "Bijles",
-  kvk: "[KvK-nummer]",
-  vat: "[BTW-nummer]",
-  address: "[Straat + nummer, postcode, plaats]",
+  kvk: "91058732",
+  vat: "NL004862218B12",
+  address: "Röntgenweg 183, 2624 BD Delft",
   country: "Nederland",
-  email: "[contact@jouwdomein.nl]",
+  email: "giorgioasimson@gmail.com",
+  phone: "+31 6 21650846",
   // Laatst bijgewerkt (handmatig aanpassen bij wijzigingen).
   updatedAt: "juni 2026",
 };

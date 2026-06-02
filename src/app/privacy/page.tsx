@@ -15,8 +15,8 @@ export default function PrivacyPage() {
       <h2>Wie zijn wij</h2>
       <p>
         Verwerkingsverantwoordelijke: {LEGAL.companyName}, {LEGAL.address},{" "}
-        {LEGAL.country}. KvK {LEGAL.kvk}. Contact:{" "}
-        <a href={`mailto:${LEGAL.email}`}>{LEGAL.email}</a>.
+        {LEGAL.country}. KvK {LEGAL.kvk}, btw {LEGAL.vat}. Contact:{" "}
+        <a href={`mailto:${LEGAL.email}`}>{LEGAL.email}</a>, {LEGAL.phone}.
       </p>
       <p>
         Voor lesgegevens die een docent over zijn leerlingen vastlegt, treden

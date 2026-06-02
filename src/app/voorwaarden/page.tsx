@@ -15,6 +15,10 @@ export default function VoorwaardenPage() {
       <p>
         {LEGAL.tradeName} is online software waarmee docenten lesgeven via video,
         een collaboratief whiteboard en chat, en hun lessen/leerlingen beheren.
+        Wij leveren <strong>uitsluitend het softwareplatform</strong>; de docent
+        is zelf verantwoordelijk voor de inhoud, kwaliteit en uitvoering van de
+        lessen en voor zijn relatie met de leerling. {LEGAL.companyName} is geen
+        partij bij de lesovereenkomst tussen docent en leerling.
       </p>
 
       <h2>2. Account</h2>
