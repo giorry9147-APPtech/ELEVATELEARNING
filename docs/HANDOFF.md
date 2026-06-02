@@ -3,7 +3,8 @@
 > Voor een nieuwe chat-sessie. Beschrijft de volledige staat, locaties,
 > beslissingen, valkuilen en wat er nog moet gebeuren. Lees ook de
 > memory-bestanden (`MEMORY.md`-index) en `docs/ROADMAP.md`,
-> `docs/SAAS-ARCHITECTURE.md`, `docs/KOSTEN-PRIJZEN.md`, `docs/VIDEO-KEUZE.md`.
+> `docs/SAAS-ARCHITECTURE.md`, `docs/KOSTEN-PRIJZEN.md`, `docs/VIDEO-KEUZE.md`,
+> `docs/MARKTANALYSE.md` (concurrentie + go-to-market + geprioriteerde fases).
 
 ## 1. Wat is dit
 Multi-tenant **SaaS bijlesplatform**: docenten nemen een abonnement (€0/€19/€39/€129),
@@ -92,17 +93,24 @@ na env-wijziging altijd opnieuw deployen.
 - **Juridische teksten** door een jurist laten nakijken (sjabloon).
 - Optioneel: oude Supabase-PAT intrekken, Resend-domein verifiëren (e-mail aan iedereen), Vercel-domeinen koppelen voor Djelian/Xiomara.
 
-## 10. Wat is gepland (volgende fases — zie docs/ROADMAP.md)
-- **Fase 5 — Docent-dashboard afronden:** leerling-roster + CRM (voortgangsnotities, contactgeschiedenis), lessenhistorie, aanwezigheid, uren/verbruik-stats. (Nieuwe tabellen: `students`, evt. `lesson_attendance`.)
-- **Fase 6 — UI/UX premium-overhaul:** design system (shadcn/ui + Tailwind + Radix), Revolut-blauw, WCAG 2.2 AA (grote type/contrast/focus voor oudere docenten), multi-step onboarding, mobile-first, vertrouwen-signalen.
-- **Fase 7 — Booking & rooster:** beschikbaarheids-model + boekingsflow + herinneringen (Resend).
-- ~~Fase 8 — AVG/GDPR~~ ✅ AFGEROND (privacy/voorwaarden/cookies + cookiebanner live). DPA-template per docent kan later nog.
-- **Fase 9 — Opdrachten & Voortgang (Xiomara):** vraag-antwoord-game + voortgang, gated op `organizations.features.assignments`. Tabellen `assignments/questions/submissions/answers` (zie SAAS-ARCHITECTURE.md).
-- **Fase 10 — Admin-panel.**
+## 10. Wat is gepland — geprioriteerd op concurrentie-impact
+Volgorde uit `docs/MARKTANALYSE.md` (deep-research jun 2026). Begin bovenaan.
 
-**Aanbevolen volgorde:** de gebruiker noemde **dashboard afronden + UI/UX fix** als prioriteit. Mijn advies: **Fase 6 (UI/UX) eerst** zodat Fase 5-dashboard meteen in de premium stijl wordt gebouwd (niet dubbel). De definitieve keuze (6 of 5) was nog niet gemaakt — vraag dit als eerste in de nieuwe chat.
+1. **Fase 6 — UI/UX premium-overhaul** ⭐ AANRADER EERST: design system (shadcn/ui + Tailwind + Radix), Revolut-blauw, WCAG 2.2 AA (grote type/contrast/focus voor oudere docenten), multi-step onboarding, mobile-first, vertrouwen-signalen. Reden: tafelgeld vs gepolijste incumbents; eerste indruk + conversie. Bouw hierna alles in deze stijl (niet dubbel).
+2. **White-label echt afmaken:** eigen domein wrijvingsloos live (Vercel-domein koppelen via CLI + DNS-instructie voor klant). Dit is je €129-troef — incumbents (Koala/WizIQ/LearnCube) vragen hiervoor enterprise-prijzen + setup.
+3. **Fase 5 — Docent-dashboard/CRM:** leerling-roster + CRM (voortgangsnotities, contactgeschiedenis), lessenhistorie, aanwezigheid, uren/verbruik-stats. Nieuwe tabellen: `students`, evt. `lesson_attendance`. Pariteit met beheertools + retentie.
+4. **Opname (Daily-recording) op Pro:** laaghangend fruit, Daily ondersteunt het al; concurrenten bieden het als betaalfeature.
+5. **Fase 7 — Booking & rooster:** beschikbaarheids-model + boekingsflow + herinneringen (Resend), óf koppelen met beheertools (integratie-wig).
+6. **Fase 9 — Opdrachten & Voortgang (Xiomara):** vraag-antwoord-game + voortgang, gated op `organizations.features.assignments`. Tabellen `assignments/questions/submissions/answers` (zie SAAS-ARCHITECTURE.md). Differentiatie + AI-haak.
+7. **AI-laag:** huiswerkhulp + transcriptie/les-samenvatting als Premium-module. Sterkste 2026-trend; grootste waarde-uplift.
+8. **Fase 10 — Admin-panel:** beheer docenten/leerlingen, verbruik, refunds.
+
+~~Fase 8 — AVG/GDPR~~ ✅ AFGEROND (privacy/voorwaarden/cookies + cookiebanner live).
+
+**Go-to-market (Benelux-first, zie MARKTANALYSE.md):** positioneer als "het Nederlandse, AVG-proof digitale klaslokaal (eigen merk + domein, iDEAL, vanaf €19)"; eerste tractie via design-partners Djelian/Xiomara (casestudy's); integratie-wig met TutorCruncher/Oases/TutorBird; Nederlandse SEO. **Caveat:** "uniek met iDEAL/AVG" is niet bewezen — niet claimen zonder per-concurrent verificatie.
 
 ## 11. Eerste actie in de nieuwe chat
-Lees dit bestand + `MEMORY.md`-index (saas-direction, daily-cost-protection,
-bijlesplatform-stack). Vraag de gebruiker of de betaalflow getest is en met
-welke fase (6 UI/UX of 5 dashboard) we doorgaan.
+Lees dit bestand + `docs/MARKTANALYSE.md` + `MEMORY.md`-index (saas-direction,
+daily-cost-protection, bijlesplatform-stack). Aanbevolen volgende stap =
+**Fase 6 (UI/UX premium-overhaul)** — bevestig dit met de gebruiker en start.
+Check ook of de Customer Portal in Stripe LIVE-mode al geactiveerd is (sectie 9).
