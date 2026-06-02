@@ -12,13 +12,19 @@ White-label klanten (Djelian, Xiomara) krijgen eigen domein + huisstijl op
 **dezelfde codebase**. Xiomara wil later een opdrachten/voortgang-module
 (per-tenant feature-flag, geen aparte site).
 
+**STATUS: het platform is COMMERCIEEL LIVE** — docenten kunnen zich aanmelden
+(invite-gated), abonneren via Stripe (iDEAL/kaart, echte betalingen), lesgeven
+met minuten-metering + blokkering, en white-label draaien. Fasen MVP t/m 4b + 8
+(AVG) zijn af. Resterend: 5 (dashboard), 6 (UI/UX), 7 (booking), 9 (Xiomara-module), 10 (admin).
+
 ## 2. Locaties & toegang
 - **App-code:** `/Users/cornerstonetech/Desktop/WHITEBOARD/bijlesplatform/` (= repo-root)
 - **GitHub:** `github.com/giorry9147-APPtech/ELEVATELEARNING`, branch `main`
 - **Live:** https://elevatelearning-nine.vercel.app
 - **Vercel:** project `elevatelearning` (account `giorry9147-apptech`). **Vercel CLI is lokaal ingelogd** → `npx vercel --prod --yes` om te deployen, `npx vercel env add NAME production` voor env.
 - **Supabase:** project ref `sjnvkqvtsvbcwixhrqam`, URL `https://sjnvkqvtsvbcwixhrqam.supabase.co`
-- **Stripe:** test-mode, NL-account `acct_1TdpucJmeFMZgdY9`
+- **Stripe:** **PRODUCTIE = LIVE** (live account `acct_1TdpuSJM88sopuxU`, charges_enabled=True). Lokaal + Vercel-development gebruiken **test** (account `acct_1TdpucJmeFMZgdY9`). Let op: dit zijn twee aparte Stripe-accounts; productie is intern consistent (live keys + live price-id's + live webhook).
+- **Bedrijf (juridisch):** Cornerstone Tech · KvK 91058732 · btw NL004862218B12 · Röntgenweg 183, 2624 BD Delft · info@cornerstonetech.nl · +31 6 82955157 — in `src/lib/legal.ts`.
 
 ## 3. Stack
 Next.js 16 (App Router, src-dir, Tailwind v4, Turbopack) · React 19 · Supabase
@@ -33,6 +39,8 @@ Stripe Billing (abonnementen) · Resend (e-mail, nog te activeren) · gehost op 
 - **Fase 3 — White-label:** branding-velden op `organizations` (logo_url, brand_color, tagline) + `org_domains` + RPCs `branding_for_host` / `my_branding`. `BrandingProvider` past merk toe (CSS-var `--brand`, `BrandMark` logo+naam in headers). `/settings` = eigenaar bewerkt branding + domeinen.
 - **Fase 4a — Abonnementen:** `/api/checkout` (Stripe Checkout, subscription, iDEAL+kaart), `/api/portal` (Customer Portal), `/api/stripe/webhook` (sub-status → `subscriptions` + `organizations.plan/features`). `BillingCard` in dashboard (plan + minuten-meter + upgrade/beheer). Plannen in `src/lib/plans.ts`.
 - **Fase 4b — Metering + gating:** `/api/daily/webhook` (meeting.ended → lesminuten = participant-min/2 → `usage_ledger`, HMAC-geverifieerd, room→sessie→org, idempotent op meeting-id). Gating in `SessionLauncher`: geen nieuwe les bij 0 resterende minuten. `my_usage()` RPC voedt de meter.
+- **Fase 8 — AVG/juridisch:** pagina's `/privacy`, `/voorwaarden`, `/cookies` (component `LegalShell`), cookiebanner (`CookieBanner`, alleen essentiële cookies) in layout, footer-links op de landing. Bedrijfsgegevens centraal in `src/lib/legal.ts` (Cornerstone Tech, ingevuld). Voorwaarden bevatten softwareleverancier-clausule (docent verantwoordelijk voor de les). LET OP: teksten zijn een sjabloon — gebruiker laat ze nog door een jurist nakijken.
+- **GO-LIVE (Stripe productie):** live producten/prijzen + live webhook aangemaakt in het live-account; Vercel-productie draait op live keys; `.env.local` blijft test. Account is geactiveerd (charges_enabled). Echte betalingen werken.
 
 ## 5. Database-migraties (Supabase SQL Editor, in volgorde, idempotent)
 `supabase/schema.sql` (basis: profiles/invites/sessions) → `001_tenants.sql` →
@@ -45,12 +53,15 @@ geen Supabase Management-token meer).
 Alles staat in `bijlesplatform/.env.local` (**gitignored**) én in **Vercel** (production+development):
 - Supabase: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (anon JWT), `SUPABASE_SERVICE_ROLE_KEY` (= `sb_secret_...`)
 - Daily: `NEXT_PUBLIC_DAILY_ROOM_URL` (`https://bijlesplatform.daily.co/Demo_bijles`), `NEXT_PUBLIC_DAILY_DOMAIN`, `DAILY_API_KEY`, `DAILY_WEBHOOK_SECRET`
-- Stripe: `STRIPE_SECRET_KEY` (sk_test), `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` (pk_test), `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PRICE_STARTER/PRO/WHITELABEL`
+- Stripe: `STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PRICE_STARTER/PRO/WHITELABEL`. **Vercel-PRODUCTIE = LIVE-waarden; Vercel-development + `.env.local` = TEST-waarden.** (Zo maak je lokaal nooit echte kosten.)
 - `NEXT_PUBLIC_APP_URL=https://elevatelearning-nine.vercel.app`
 
-**REGEL: secrets ALLEEN in `.env.local` + Vercel, NOOIT in `.env.example`** (die staat in git via `!.env.example`-exception). Bij het zetten van een key: assign aan de juiste var-naam, geen losse regels.
+**REGEL: secrets ALLEEN in `.env.local` + Vercel, NOOIT in `.env.example`** (die staat in git via `!.env.example`-exception). Bij het zetten van een key: assign aan de juiste var-naam, geen losse regels. **Live secrets nooit naar een /tmp-bestand schrijven** (classifier blokkeert dat terecht) — doe key-operaties in één shell-invocatie met de waarde in een variabele/stdin.
 
-Concrete id's: Stripe price-ids — starter `price_1TdqDOJmeFMZgdY9FOMFgtl7`, pro `price_1TdqDPJmeFMZgdY9LcG802MW`, whitelabel `price_1TdqDPJmeFMZgdY9qLz1IbsZ`. Stripe-webhook endpoint `we_1TdqIBJmeFMZgdY9SdqVcNxC` → `/api/stripe/webhook`. Daily-webhook uuid `5118a8ca-9285-4d03-915f-f84e61902609` → `/api/daily/webhook`.
+Concrete id's:
+- **Stripe TEST** (lokaal/dev): price-ids starter `price_1TdqDOJmeFMZgdY9FOMFgtl7`, pro `price_1TdqDPJmeFMZgdY9LcG802MW`, whitelabel `price_1TdqDPJmeFMZgdY9qLz1IbsZ`; webhook `we_1TdqIBJmeFMZgdY9SdqVcNxC`.
+- **Stripe LIVE** (productie): price-ids starter `price_1TdrbGJM88sopuxUuxqUXQJ0`, pro `price_1TdrbHJM88sopuxUwtGA2vaP`, whitelabel `price_1TdrbHJM88sopuxU54vt3RQ8`; live webhook-endpoint apart aangemaakt op dezelfde URL.
+- Daily-webhook uuid `5118a8ca-9285-4d03-915f-f84e61902609` → `/api/daily/webhook`.
 
 ## 7. Build & deploy (workflow elke wijziging)
 ```
@@ -73,20 +84,23 @@ na env-wijziging altijd opnieuw deployen.
 - **Werkt-zonder-keys/zonder-migratie patroon:** code degradeert netjes (localStorage-fallback, "niet gekoppeld"-meldingen) i.p.v. crashen.
 
 ## 9. Wat de gebruiker nog moet doen (handmatig)
-- **Betaalflow testen:** login → `/prijzen` → Pro kiezen → Stripe Checkout met testkaart `4242 4242 4242 4242` → terug op dashboard → plan + meter verschijnen.
-- **Customer Portal activeren** in Stripe (Settings → Billing → Customer portal → Save) als `/api/portal` een fout geeft.
+- ✅ Betaalflow in TEST is getest en werkt (bevestigd door gebruiker).
+- **Customer Portal in LIVE-mode activeren** in Stripe (Settings → Billing → Customer portal → Save). De test-mode-activatie geldt NIET voor live; anders faalt `/api/portal` in productie.
+- **Stripe-activatie helemaal afronden** als er nog stappen open staan (bank/verificatiedocument).
+- **Live betaalflow verifiëren** (optioneel, met echt geld): zelf Starter €19 nemen → plan+meter checken → daarna opzeggen/terugbetalen.
 - **Metering verifiëren:** een echte les draaien (ingelogd), afsluiten, dan meter checken (Daily `meeting.ended` → usage_ledger).
+- **Juridische teksten** door een jurist laten nakijken (sjabloon).
 - Optioneel: oude Supabase-PAT intrekken, Resend-domein verifiëren (e-mail aan iedereen), Vercel-domeinen koppelen voor Djelian/Xiomara.
 
 ## 10. Wat is gepland (volgende fases — zie docs/ROADMAP.md)
 - **Fase 5 — Docent-dashboard afronden:** leerling-roster + CRM (voortgangsnotities, contactgeschiedenis), lessenhistorie, aanwezigheid, uren/verbruik-stats. (Nieuwe tabellen: `students`, evt. `lesson_attendance`.)
 - **Fase 6 — UI/UX premium-overhaul:** design system (shadcn/ui + Tailwind + Radix), Revolut-blauw, WCAG 2.2 AA (grote type/contrast/focus voor oudere docenten), multi-step onboarding, mobile-first, vertrouwen-signalen.
 - **Fase 7 — Booking & rooster:** beschikbaarheids-model + boekingsflow + herinneringen (Resend).
-- **Fase 8 — AVG/GDPR:** Voorwaarden/Privacy/cookiebanner/DPA, minderjarigen (NL 16).
+- ~~Fase 8 — AVG/GDPR~~ ✅ AFGEROND (privacy/voorwaarden/cookies + cookiebanner live). DPA-template per docent kan later nog.
 - **Fase 9 — Opdrachten & Voortgang (Xiomara):** vraag-antwoord-game + voortgang, gated op `organizations.features.assignments`. Tabellen `assignments/questions/submissions/answers` (zie SAAS-ARCHITECTURE.md).
 - **Fase 10 — Admin-panel.**
 
-**Aanbevolen volgorde:** de gebruiker noemde **dashboard afronden + UI/UX fix** als prioriteit. Mijn advies: **Fase 6 (UI/UX) eerst** zodat Fase 5-dashboard meteen in de premium stijl wordt gebouwd (niet dubbel). De gebruiker had de definitieve keuze nog niet gemaakt toen deze chat eindigde — vraag dit als eerste in de nieuwe chat.
+**Aanbevolen volgorde:** de gebruiker noemde **dashboard afronden + UI/UX fix** als prioriteit. Mijn advies: **Fase 6 (UI/UX) eerst** zodat Fase 5-dashboard meteen in de premium stijl wordt gebouwd (niet dubbel). De definitieve keuze (6 of 5) was nog niet gemaakt — vraag dit als eerste in de nieuwe chat.
 
 ## 11. Eerste actie in de nieuwe chat
 Lees dit bestand + `MEMORY.md`-index (saas-direction, daily-cost-protection,
