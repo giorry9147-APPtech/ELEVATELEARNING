@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { generateRoomId, normalizeRoomInput } from "@/lib/rooms";
 import { createSession } from "@/lib/sessions";
+import { getMyUsage } from "@/lib/billing";
 import { useAuth } from "@/components/AuthProvider";
 
 /**
@@ -18,10 +19,24 @@ export default function SessionLauncher() {
   const [joinCode, setJoinCode] = useState("");
   const [error, setError] = useState("");
   const [starting, setStarting] = useState(false);
+  const [limitReached, setLimitReached] = useState(false);
 
   const startSession = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
+    setLimitReached(false);
     setStarting(true);
+
+    // Gating: ingelogde docent zonder minuten kan geen nieuwe les starten.
+    if (user) {
+      const usage = await getMyUsage();
+      if (usage && usage.minutesRemaining <= 0) {
+        setLimitReached(true);
+        setStarting(false);
+        return;
+      }
+    }
+
     const roomId = generateRoomId();
     await createSession({
       roomId,
@@ -65,6 +80,15 @@ export default function SessionLauncher() {
         >
           {starting ? "Bezig…" : "Start les →"}
         </button>
+        {limitReached && (
+          <p className="mt-2 text-sm text-red-600">
+            Je lesminuten zijn op.{" "}
+            <a href="/prijzen" className="font-medium underline">
+              Upgrade je abonnement
+            </a>{" "}
+            om verder te gaan.
+          </p>
+        )}
       </form>
 
       {/* Join een bestaande les */}
