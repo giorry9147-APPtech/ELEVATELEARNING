@@ -7,6 +7,7 @@ import { listSessions, deleteSession } from "@/lib/sessions";
 import { getCurrentOrg, type Org } from "@/lib/org";
 import { useAuth } from "@/components/AuthProvider";
 import { BrandMark } from "@/components/BrandingProvider";
+import BillingCard from "@/components/BillingCard";
 
 export default function Dashboard() {
   const { user, loading, enabled, signOut } = useAuth();
@@ -87,6 +88,7 @@ export default function Dashboard() {
           </p>
         )}
         <h1 className="mt-1 text-2xl font-bold text-slate-900">Mijn lessen</h1>
+        {user && <BillingCard />}
         {!enabled && (
           <p className="mt-1 text-sm text-amber-600">
             Lokale modus — deze lijst staat alleen op dit apparaat.
