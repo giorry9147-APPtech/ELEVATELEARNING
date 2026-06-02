@@ -6,6 +6,7 @@ import { roomUrl, type RecentSession } from "@/lib/rooms";
 import { listSessions, deleteSession } from "@/lib/sessions";
 import { getCurrentOrg, type Org } from "@/lib/org";
 import { useAuth } from "@/components/AuthProvider";
+import { BrandMark } from "@/components/BrandingProvider";
 
 export default function Dashboard() {
   const { user, loading, enabled, signOut } = useAuth();
@@ -42,8 +43,8 @@ export default function Dashboard() {
     <main className="min-h-screen bg-slate-50">
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
-          <Link href="/" className="flex items-center gap-2 font-bold text-slate-800">
-            <span>📚</span> Bijles
+          <Link href="/">
+            <BrandMark />
           </Link>
           <div className="flex items-center gap-3">
             {user && (
@@ -51,6 +52,12 @@ export default function Dashboard() {
                 <span className="hidden text-sm text-slate-500 sm:inline">
                   {user.email}
                 </span>
+                <Link
+                  href="/settings"
+                  className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
+                >
+                  Instellingen
+                </Link>
                 <button
                   onClick={signOut}
                   className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
@@ -61,7 +68,8 @@ export default function Dashboard() {
             )}
             <Link
               href="/"
-              className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-700"
+              style={{ backgroundColor: "var(--brand)" }}
+              className="rounded-lg px-4 py-2 text-sm font-medium text-white hover:brightness-95"
             >
               + Nieuwe les
             </Link>

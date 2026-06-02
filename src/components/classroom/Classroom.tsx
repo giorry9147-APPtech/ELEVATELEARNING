@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Whiteboard from "./Whiteboard";
 import VideoPanel from "./VideoPanel";
 import Chat from "./Chat";
+import { BrandMark } from "@/components/BrandingProvider";
 
 type Props = { roomId: string };
 
@@ -60,8 +61,7 @@ export default function Classroom({ roomId }: Props) {
     <div className="flex h-screen flex-col bg-slate-100">
       <header className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-2">
         <div className="flex items-center gap-2">
-          <span className="text-lg">📚</span>
-          <span className="font-semibold text-slate-800">Bijles</span>
+          <BrandMark />
           <span className="text-slate-400">/</span>
           <span className="text-sm text-slate-500">room: {roomId}</span>
         </div>

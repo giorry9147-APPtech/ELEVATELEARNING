@@ -21,7 +21,8 @@ export default function LandingNav() {
       ) : (
         <Link
           href="/login"
-          className="rounded-lg bg-sky-600 px-4 py-2 font-medium text-white hover:bg-sky-700"
+          style={{ backgroundColor: "var(--brand)" }}
+          className="rounded-lg px-4 py-2 font-medium text-white brightness-100 hover:brightness-95"
         >
           Inloggen
         </Link>

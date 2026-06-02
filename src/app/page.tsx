@@ -1,13 +1,12 @@
 import SessionLauncher from "@/components/SessionLauncher";
 import LandingNav from "@/components/LandingNav";
+import { BrandMark } from "@/components/BrandingProvider";
 
 export default function Home() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-sky-50 to-white">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
-        <div className="flex items-center gap-2 text-lg font-bold text-slate-800">
-          <span>📚</span> Bijles
-        </div>
+        <BrandMark className="text-lg" />
         <LandingNav />
       </header>
 
