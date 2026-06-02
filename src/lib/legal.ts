@@ -6,7 +6,7 @@
  * advies. Laat ze vóór commercieel gebruik nakijken door een jurist.
  */
 export const LEGAL = {
-  companyName: "[Bedrijfsnaam — juridische entiteit bij KvK]",
+  companyName: "Cornerstone Tech",
   tradeName: "Bijles",
   kvk: "91058732",
   vat: "NL004862218B12",
