@@ -12,8 +12,8 @@ export const LEGAL = {
   vat: "NL004862218B12",
   address: "Röntgenweg 183, 2624 BD Delft",
   country: "Nederland",
-  email: "giorgioasimson@gmail.com",
-  phone: "+31 6 21650846",
+  email: "info@cornerstonetech.nl",
+  phone: "+31 6 82955157",
   // Laatst bijgewerkt (handmatig aanpassen bij wijzigingen).
   updatedAt: "juni 2026",
 };
