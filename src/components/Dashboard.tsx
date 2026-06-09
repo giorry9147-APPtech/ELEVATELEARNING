@@ -5,9 +5,16 @@ import { useEffect, useState } from "react";
 import { roomUrl, type RecentSession } from "@/lib/rooms";
 import { listSessions, deleteSession } from "@/lib/sessions";
 import { getCurrentOrg, type Org } from "@/lib/org";
+import { listStudents } from "@/lib/students";
+import { studentStatsMap } from "@/lib/lessons";
 import { useAuth } from "@/components/AuthProvider";
 import { BrandMark } from "@/components/BrandingProvider";
 import BillingCard from "@/components/BillingCard";
+import { Container } from "@/components/ui/Container";
+import { Card } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
+import { Button, buttonClasses } from "@/components/ui/Button";
+import { GraduationIcon, ArrowRightIcon, UsersIcon } from "@/components/ui/icons";
 
 export default function Dashboard() {
   const { user, loading, enabled, signOut } = useAuth();
@@ -15,6 +22,8 @@ export default function Dashboard() {
   const [org, setOrg] = useState<Org | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
   const [busy, setBusy] = useState(true);
+  const [studentCount, setStudentCount] = useState<number | null>(null);
+  const [lessonCount, setLessonCount] = useState(0);
 
   useEffect(() => {
     if (loading) return;
@@ -23,7 +32,13 @@ export default function Dashboard() {
       setSessions(s);
       setBusy(false);
     });
-    if (user) getCurrentOrg().then(setOrg);
+    if (user) {
+      getCurrentOrg().then(setOrg);
+      listStudents().then((s) => setStudentCount(s ? s.length : null));
+      studentStatsMap().then((m) =>
+        setLessonCount(Object.values(m).reduce((sum, x) => sum + x.total, 0)),
+      );
+    }
   }, [loading, user]);
 
   const remove = async (roomId: string) => {
@@ -41,92 +56,107 @@ export default function Dashboard() {
   const mustLogin = enabled && !loading && !user;
 
   return (
-    <main className="min-h-screen bg-slate-50">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
+    <main className="min-h-screen flex-1 bg-muted/40">
+      <header className="border-b border-border bg-surface">
+        <Container className="flex items-center justify-between py-4">
           <Link href="/">
             <BrandMark />
           </Link>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             {user && (
               <>
-                <span className="hidden text-sm text-slate-500 sm:inline">
+                <span className="hidden text-sm text-muted-foreground sm:inline">
                   {user.email}
                 </span>
-                <Link
-                  href="/settings"
-                  className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
-                >
+                <Link href="/leerlingen" className={buttonClasses({ variant: "secondary", size: "sm" })}>
+                  Leerlingen
+                </Link>
+                <Link href="/tarieven" className={buttonClasses({ variant: "secondary", size: "sm" })}>
+                  Tarieven
+                </Link>
+                <Link href="/settings" className={buttonClasses({ variant: "secondary", size: "sm" })}>
                   Instellingen
                 </Link>
-                <button
-                  onClick={signOut}
-                  className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
-                >
+                <button onClick={signOut} className={buttonClasses({ variant: "ghost", size: "sm" })}>
                   Uitloggen
                 </button>
               </>
             )}
-            <Link
-              href="/"
-              style={{ backgroundColor: "var(--brand)" }}
-              className="rounded-lg px-4 py-2 text-sm font-medium text-white hover:brightness-95"
-            >
+            <Link href="/" className={buttonClasses({ size: "sm" })}>
               + Nieuwe les
             </Link>
           </div>
-        </div>
+        </Container>
       </header>
 
-      <div className="mx-auto max-w-4xl px-6 py-8">
+      <Container className="py-8">
         {org && (
-          <p className="text-sm font-medium text-sky-600">
-            🏫 {org.name}
-            <span className="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-normal text-slate-500">
-              {org.role}
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 text-sm font-medium text-brand">
+              <GraduationIcon size={16} /> {org.name}
             </span>
-          </p>
+            <Badge variant="muted">{org.role}</Badge>
+          </div>
         )}
-        <h1 className="mt-1 text-2xl font-bold text-slate-900">Mijn lessen</h1>
+        <h1 className="mt-1.5 text-2xl font-bold tracking-tight text-foreground">
+          Mijn lessen
+        </h1>
         {user && <BillingCard />}
+        {user && studentCount !== null && (
+          <Card className="mt-6 flex flex-wrap items-center gap-4 p-5">
+            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-soft text-brand-strong">
+              <UsersIcon size={22} />
+            </span>
+            <div className="flex-1">
+              <p className="text-sm text-muted-foreground">Leerlingen (CRM)</p>
+              <p className="text-lg font-semibold text-foreground">
+                {studentCount} {studentCount === 1 ? "leerling" : "leerlingen"}
+                {lessonCount > 0 && (
+                  <span className="font-normal text-muted-foreground">
+                    {" · "}
+                    {lessonCount} gekoppelde {lessonCount === 1 ? "les" : "lessen"}
+                  </span>
+                )}
+              </p>
+            </div>
+            <Link href="/leerlingen" className={buttonClasses({ variant: "secondary", size: "sm" })}>
+              Beheer leerlingen
+            </Link>
+          </Card>
+        )}
         {!enabled && (
-          <p className="mt-1 text-sm text-amber-600">
+          <p className="mt-1 text-sm text-warning">
             Lokale modus — deze lijst staat alleen op dit apparaat.
           </p>
         )}
 
         {mustLogin ? (
-          <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-10 text-center">
-            <p className="text-slate-600">Log in om je lessen te zien.</p>
-            <Link
-              href="/login"
-              className="mt-3 inline-block rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-700"
-            >
+          <Card className="mt-8 p-10 text-center">
+            <p className="text-muted-foreground">Log in om je lessen te zien.</p>
+            <Link href="/login" className={buttonClasses({ size: "md", className: "mt-4" })}>
               Inloggen
             </Link>
-          </div>
+          </Card>
         ) : busy ? (
-          <p className="mt-8 text-slate-400">Laden…</p>
+          <p className="mt-8 text-muted-foreground">Laden…</p>
         ) : sessions.length === 0 ? (
-          <div className="mt-8 rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center">
-            <p className="text-slate-500">Nog geen lessen.</p>
-            <Link
-              href="/"
-              className="mt-3 inline-block rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-700"
-            >
-              Start je eerste les
+          <Card className="mt-8 border-dashed p-10 text-center">
+            <p className="text-muted-foreground">Nog geen lessen.</p>
+            <Link href="/" className={buttonClasses({ size: "md", className: "mt-4" })}>
+              Start je eerste les <ArrowRightIcon size={18} />
             </Link>
-          </div>
+          </Card>
         ) : (
           <ul className="mt-6 space-y-3">
             {sessions.map((s) => (
-              <li
+              <Card
                 key={s.roomId}
-                className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-4"
+                as="li"
+                className="flex items-center justify-between p-4"
               >
                 <div className="min-w-0">
-                  <p className="truncate font-medium text-slate-800">{s.title}</p>
-                  <p className="text-xs text-slate-400">
+                  <p className="truncate font-medium text-foreground">{s.title}</p>
+                  <p className="text-xs text-muted-foreground">
                     {new Date(s.createdAt).toLocaleString("nl-NL", {
                       dateStyle: "medium",
                       timeStyle: "short",
@@ -135,31 +165,25 @@ export default function Dashboard() {
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
-                  <button
-                    onClick={() => copy(s.roomId)}
-                    className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
-                  >
+                  <Button onClick={() => copy(s.roomId)} variant="secondary" size="sm">
                     {copied === s.roomId ? "Gekopieerd!" : "Link"}
-                  </button>
-                  <Link
-                    href={`/klas/${s.roomId}`}
-                    className="rounded-lg bg-sky-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-sky-700"
-                  >
+                  </Button>
+                  <Link href={`/klas/${s.roomId}`} className={buttonClasses({ size: "sm" })}>
                     Open
                   </Link>
                   <button
                     onClick={() => remove(s.roomId)}
-                    className="rounded-lg px-2 py-1.5 text-sm text-slate-400 hover:text-red-600"
+                    className="rounded-full p-2 text-muted-foreground transition hover:bg-muted hover:text-danger"
                     aria-label="Verwijderen"
                   >
                     ✕
                   </button>
                 </div>
-              </li>
+              </Card>
             ))}
           </ul>
         )}
-      </div>
+      </Container>
     </main>
   );
 }

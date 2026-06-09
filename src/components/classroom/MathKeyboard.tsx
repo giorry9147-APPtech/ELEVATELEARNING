@@ -66,16 +66,16 @@ export default function MathKeyboard() {
   return (
     <div className="pointer-events-none absolute bottom-3 left-1/2 z-20 -translate-x-1/2">
       {open && (
-        <div className="pointer-events-auto mb-2 max-h-72 w-[min(92vw,420px)] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-3 shadow-xl">
+        <div className="pointer-events-auto mb-2 max-h-72 w-[min(92vw,420px)] overflow-y-auto rounded-2xl border border-border bg-surface p-3 shadow-soft-lg">
           {hint && (
-            <p className="mb-2 rounded-lg bg-amber-50 px-2 py-1.5 text-xs text-amber-700">
+            <p className="mb-2 rounded-xl bg-amber-50 px-2 py-1.5 text-xs text-warning">
               Kies eerst de tekst-tool (toets <strong>T</strong> of <strong>8</strong>)
               en klik op het bord om te typen.
             </p>
           )}
           {GROUPS.map((g) => (
             <div key={g.label} className="mb-2 last:mb-0">
-              <div className="mb-1 text-[11px] font-medium uppercase tracking-wide text-slate-400">
+              <div className="mb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                 {g.label}
               </div>
               <div className="flex flex-wrap gap-1">
@@ -83,7 +83,7 @@ export default function MathKeyboard() {
                   <button
                     key={s}
                     onMouseDown={(e) => handleSymbol(e, s)}
-                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-base text-slate-700 hover:bg-sky-50 hover:text-sky-700"
+                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-muted text-base text-foreground transition hover:bg-brand-soft hover:text-brand-strong"
                   >
                     {s}
                   </button>
@@ -96,10 +96,10 @@ export default function MathKeyboard() {
 
       <button
         onClick={() => setOpen((o) => !o)}
-        className={`pointer-events-auto flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium shadow-lg ${
+        className={`pointer-events-auto flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium shadow-soft-lg transition ${
           open
-            ? "bg-slate-800 text-white"
-            : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"
+            ? "bg-foreground text-background"
+            : "bg-surface text-foreground ring-1 ring-border hover:bg-muted"
         }`}
       >
         <span className="text-base">∑</span>

@@ -8,6 +8,7 @@ import {
   type Branding,
 } from "@/lib/branding";
 import { useAuth } from "@/components/AuthProvider";
+import { LogoMark } from "@/components/ui/Logo";
 
 const BrandingContext = createContext<Branding>(PLATFORM_BRANDING);
 
@@ -52,16 +53,25 @@ export function useBranding() {
   return useContext(BrandingContext);
 }
 
-/** Logo + naam, herbruikbaar in headers. */
-export function BrandMark({ className = "" }: { className?: string }) {
+/** Logo + naam, herbruikbaar in headers. `tone="light"` voor donkere/blauwe achtergrond. */
+export function BrandMark({
+  className = "",
+  tone = "default",
+}: {
+  className?: string;
+  tone?: "default" | "light";
+}) {
   const b = useBranding();
+  const light = tone === "light";
   return (
-    <span className={`flex items-center gap-2 font-bold text-slate-800 ${className}`}>
+    <span
+      className={`flex items-center gap-2.5 font-bold ${light ? "text-white" : "text-foreground"} ${className}`}
+    >
       {b.logoUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={b.logoUrl} alt={b.name} className="h-7 w-auto object-contain" />
+        <img src={b.logoUrl} alt={b.name} className="h-8 w-auto object-contain" />
       ) : (
-        <span>📚</span>
+        <LogoMark size={32} mono={light} />
       )}
       <span>{b.name}</span>
     </span>

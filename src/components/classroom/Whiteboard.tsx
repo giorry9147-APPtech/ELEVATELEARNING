@@ -32,7 +32,7 @@ const Excalidraw = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-full items-center justify-center text-slate-400">
+      <div className="flex h-full items-center justify-center text-muted-foreground">
         Whiteboard laden…
       </div>
     ),
@@ -381,17 +381,17 @@ export default function Whiteboard({ roomId }: Props) {
   return (
     <div className="flex h-full w-full flex-col">
       {/* Tabbalk: borden voorbereiden + wisselen */}
-      <div className="flex items-center gap-1 overflow-x-auto border-b border-slate-200 bg-white px-2 py-1.5">
+      <div className="flex items-center gap-1 overflow-x-auto border-b border-border bg-surface px-2 py-1.5">
         {boards.map((b) => (
           <button
             key={b.id}
             onClick={() => switchBoard(b.id)}
             onDoubleClick={() => renameBoard(b.id)}
             title="Klik om te wisselen · dubbelklik om te hernoemen"
-            className={`group flex shrink-0 items-center gap-1 rounded-lg px-3 py-1 text-sm font-medium ${
+            className={`group flex shrink-0 items-center gap-1 rounded-lg px-3 py-1 text-sm font-medium transition ${
               b.id === activeId
-                ? "bg-sky-600 text-white"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                ? "bg-brand text-white"
+                : "bg-muted text-muted-foreground hover:bg-border"
             }`}
           >
             {b.name}
@@ -403,7 +403,7 @@ export default function Whiteboard({ roomId }: Props) {
                   deleteBoard(b.id);
                 }}
                 className={`ml-1 rounded px-1 text-xs ${
-                  b.id === activeId ? "hover:bg-sky-700" : "hover:bg-slate-300"
+                  b.id === activeId ? "hover:bg-brand-strong" : "hover:bg-slate-300"
                 }`}
               >
                 ✕
@@ -414,7 +414,7 @@ export default function Whiteboard({ roomId }: Props) {
         <button
           onClick={addBoard}
           title="Nieuw bord toevoegen"
-          className="shrink-0 rounded-lg border border-dashed border-slate-300 px-3 py-1 text-sm font-medium text-slate-500 hover:bg-slate-50"
+          className="shrink-0 rounded-lg border border-dashed border-border px-3 py-1 text-sm font-medium text-muted-foreground transition hover:bg-muted"
         >
           + Bord
         </button>
@@ -434,7 +434,7 @@ export default function Whiteboard({ roomId }: Props) {
             UIOptions={{ canvasActions: { loadScene: true, saveToActiveFile: false } }}
           />
         ) : (
-          <div className="flex h-full items-center justify-center text-slate-400">
+          <div className="flex h-full items-center justify-center text-muted-foreground">
             Whiteboard laden…
           </div>
         )}
@@ -442,7 +442,7 @@ export default function Whiteboard({ roomId }: Props) {
           <button
             onClick={addPage}
             title="Voeg een pagina toe onder de huidige"
-            className="absolute bottom-20 left-3 z-30 flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-lg ring-1 ring-slate-200 hover:bg-slate-50"
+            className="absolute bottom-20 left-3 z-30 flex items-center gap-1.5 rounded-full bg-surface px-4 py-2 text-sm font-medium text-foreground shadow-soft-lg ring-1 ring-border transition hover:bg-muted"
           >
             <span className="text-base">＋</span> Pagina
           </button>
@@ -451,7 +451,7 @@ export default function Whiteboard({ roomId }: Props) {
         {config.supabase.enabled && (
           <span
             className={`pointer-events-none absolute right-3 top-3 z-10 rounded-full px-2 py-0.5 text-xs font-medium ${
-              synced ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
+              synced ? "bg-green-100 text-success" : "bg-amber-100 text-warning"
             }`}
           >
             {synced ? "● Live gesynchroniseerd" : "○ Verbinden…"}

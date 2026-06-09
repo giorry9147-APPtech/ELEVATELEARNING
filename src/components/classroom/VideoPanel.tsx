@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import DailyIframe, { type DailyCall } from "@daily-co/daily-js";
 import { dailyLimits } from "@/lib/config";
+import { Button } from "@/components/ui/Button";
+import { VideoIcon, ClockIcon } from "@/components/ui/icons";
 
 type Props = { roomId: string; userName?: string };
 
@@ -129,7 +131,7 @@ export default function VideoPanel({ roomId, userName }: Props) {
   if (!url) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-3 bg-slate-900 p-6 text-center text-slate-300">
-        <div className="text-4xl">🎥</div>
+        <VideoIcon size={40} className="text-slate-500" />
         <p className="font-medium text-white">Video nog niet ingesteld</p>
         <p className="max-w-xs text-sm text-slate-400">
           Maak op{" "}
@@ -166,20 +168,16 @@ export default function VideoPanel({ roomId, userName }: Props) {
       {/* Sessie verlopen → call is geëjecteerd, minuten stoppen. */}
       {isOver && (
         <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-slate-900/95 p-6 text-center text-slate-200">
-          <div className="text-4xl">⏱️</div>
+          <ClockIcon size={40} className="text-slate-400" />
           <p className="font-medium text-white">Sessie beëindigd</p>
           <p className="max-w-xs text-sm text-slate-400">
             De videosessie is automatisch afgesloten. Verleng om verder te gaan.
           </p>
-          <button
-            onClick={extend}
-            disabled={extending}
-            className="mt-1 rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-700 disabled:opacity-60"
-          >
+          <Button onClick={extend} disabled={extending} className="mt-1">
             {extending
               ? "Bezig…"
               : `Sessie heropenen (+${dailyLimits.extendMinutes} min)`}
-          </button>
+          </Button>
         </div>
       )}
 
@@ -192,7 +190,7 @@ export default function VideoPanel({ roomId, userName }: Props) {
           <button
             onClick={extend}
             disabled={extending}
-            className="shrink-0 rounded-lg bg-amber-950 px-3 py-1.5 font-medium text-amber-50 hover:bg-amber-900 disabled:opacity-60"
+            className="shrink-0 rounded-full bg-amber-950 px-3 py-1.5 font-medium text-amber-50 transition hover:bg-amber-900 disabled:opacity-60"
           >
             {extending ? "Bezig…" : `Verleng +${dailyLimits.extendMinutes} min`}
           </button>

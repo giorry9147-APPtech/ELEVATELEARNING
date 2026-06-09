@@ -6,6 +6,10 @@ import { generateRoomId, normalizeRoomInput } from "@/lib/rooms";
 import { createSession } from "@/lib/sessions";
 import { getMyUsage } from "@/lib/billing";
 import { useAuth } from "@/components/AuthProvider";
+import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { PencilIcon, LinkIcon, ArrowRightIcon } from "@/components/ui/icons";
 
 /**
  * Start een nieuwe les (genereert een unieke room + deelbare link) of join
@@ -57,66 +61,64 @@ export default function SessionLauncher() {
   };
 
   return (
-    <div className="mx-auto grid max-w-3xl gap-4 sm:grid-cols-2">
+    <div className="mx-auto grid max-w-3xl gap-4 text-left sm:grid-cols-2">
       {/* Start een nieuwe les */}
-      <form
-        onSubmit={startSession}
-        className="rounded-2xl border border-slate-200 bg-white p-6 text-left shadow-sm"
-      >
-        <h3 className="font-semibold text-slate-800">Nieuwe les starten</h3>
-        <p className="mt-1 text-sm text-slate-500">
-          Je krijgt direct een deelbare link voor je student.
-        </p>
-        <input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Titel (bijv. Wiskunde — afgeleiden)"
-          className="mt-4 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-sky-500"
-        />
-        <button
-          type="submit"
-          disabled={starting}
-          className="mt-3 w-full rounded-lg bg-sky-600 px-4 py-2 font-medium text-white hover:bg-sky-700 disabled:opacity-60"
-        >
-          {starting ? "Bezig…" : "Start les →"}
-        </button>
-        {limitReached && (
-          <p className="mt-2 text-sm text-red-600">
-            Je lesminuten zijn op.{" "}
-            <a href="/prijzen" className="font-medium underline">
-              Upgrade je abonnement
-            </a>{" "}
-            om verder te gaan.
+      <Card className="p-6">
+        <form onSubmit={startSession}>
+          <span className="btn-primary mb-4 flex h-10 w-10 items-center justify-center rounded-xl">
+            <PencilIcon size={20} />
+          </span>
+          <h3 className="font-semibold text-foreground">Nieuwe les starten</h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Je krijgt direct een deelbare link voor je student.
           </p>
-        )}
-      </form>
+          <Input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Titel (bijv. Wiskunde — afgeleiden)"
+            className="mt-4"
+          />
+          <Button type="submit" disabled={starting} fullWidth className="mt-3">
+            {starting ? "Bezig…" : "Start les"}
+            {!starting && <ArrowRightIcon size={18} />}
+          </Button>
+          {limitReached && (
+            <p className="mt-2 text-sm text-danger">
+              Je lesminuten zijn op.{" "}
+              <a href="/prijzen" className="font-medium underline">
+                Upgrade je abonnement
+              </a>{" "}
+              om verder te gaan.
+            </p>
+          )}
+        </form>
+      </Card>
 
       {/* Join een bestaande les */}
-      <form
-        onSubmit={joinSession}
-        className="rounded-2xl border border-slate-200 bg-white p-6 text-left shadow-sm"
-      >
-        <h3 className="font-semibold text-slate-800">Deelnemen aan een les</h3>
-        <p className="mt-1 text-sm text-slate-500">
-          Heb je een link of code gekregen? Plak ’m hier.
-        </p>
-        <input
-          value={joinCode}
-          onChange={(e) => {
-            setJoinCode(e.target.value);
-            setError("");
-          }}
-          placeholder="Room-code of link"
-          className="mt-4 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-sky-500"
-        />
-        {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
-        <button
-          type="submit"
-          className="mt-3 w-full rounded-lg border border-slate-300 px-4 py-2 font-medium text-slate-700 hover:bg-slate-50"
-        >
-          Deelnemen
-        </button>
-      </form>
+      <Card className="p-6">
+        <form onSubmit={joinSession}>
+          <span className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-brand-soft text-brand-strong">
+            <LinkIcon size={20} />
+          </span>
+          <h3 className="font-semibold text-foreground">Deelnemen aan een les</h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Heb je een link of code gekregen? Plak ’m hier.
+          </p>
+          <Input
+            value={joinCode}
+            onChange={(e) => {
+              setJoinCode(e.target.value);
+              setError("");
+            }}
+            placeholder="Room-code of link"
+            className="mt-4"
+          />
+          {error && <p className="mt-1 text-xs text-danger">{error}</p>}
+          <Button type="submit" variant="secondary" fullWidth className="mt-3">
+            Deelnemen
+          </Button>
+        </form>
+      </Card>
     </div>
   );
 }

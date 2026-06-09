@@ -6,6 +6,10 @@ import { createClient } from "@/lib/supabase/client";
 import { getCurrentOrg, type Org } from "@/lib/org";
 import { useAuth } from "@/components/AuthProvider";
 import { BrandMark } from "@/components/BrandingProvider";
+import { Container } from "@/components/ui/Container";
+import { Card } from "@/components/ui/Card";
+import { Button, buttonClasses } from "@/components/ui/Button";
+import { Input, Label } from "@/components/ui/Input";
 
 type Domain = { id: string; hostname: string; verified: boolean };
 
@@ -99,17 +103,13 @@ export default function Settings() {
 
   if (!loading && !user) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-slate-50">
-        <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center">
-          <p className="text-slate-600">Log in om je instellingen te beheren.</p>
-          <Link
-            href="/login"
-            className="mt-3 inline-block rounded-lg px-4 py-2 text-sm font-medium text-white"
-            style={{ backgroundColor: "var(--brand)" }}
-          >
+      <main className="flex min-h-screen items-center justify-center bg-muted/40 px-4">
+        <Card className="p-10 text-center">
+          <p className="text-muted-foreground">Log in om je instellingen te beheren.</p>
+          <Link href="/login" className={buttonClasses({ size: "md", className: "mt-4" })}>
             Inloggen
           </Link>
-        </div>
+        </Card>
       </main>
     );
   }
@@ -117,104 +117,96 @@ export default function Settings() {
   const isOwner = org?.role === "owner";
 
   return (
-    <main className="min-h-screen bg-slate-50">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-3xl items-center justify-between px-6 py-4">
+    <main className="min-h-screen flex-1 bg-muted/40">
+      <header className="border-b border-border bg-surface">
+        <Container size="md" className="flex items-center justify-between py-4">
           <Link href="/dashboard">
             <BrandMark />
           </Link>
           <Link
             href="/dashboard"
-            className="text-sm text-slate-500 hover:text-slate-800"
+            className="text-sm text-muted-foreground transition hover:text-foreground"
           >
             ← Terug
           </Link>
-        </div>
+        </Container>
       </header>
 
-      <div className="mx-auto max-w-3xl px-6 py-8">
-        <h1 className="text-2xl font-bold text-slate-900">Instellingen</h1>
+      <Container size="md" className="py-8">
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">Instellingen</h1>
         {org && (
-          <p className="mt-1 text-sm text-slate-500">
-            Lesomgeving: <strong>{org.name}</strong> · rol {org.role}
+          <p className="mt-1 text-sm text-muted-foreground">
+            Lesomgeving: <strong className="text-foreground">{org.name}</strong> · rol {org.role}
           </p>
         )}
 
         {!isOwner && org && (
-          <p className="mt-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-700">
+          <p className="mt-4 rounded-xl bg-amber-50 px-3 py-2 text-sm text-warning">
             Alleen de eigenaar van de lesomgeving kan branding en domeinen wijzigen.
           </p>
         )}
 
         {/* Branding */}
-        <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-6">
-          <h2 className="font-semibold text-slate-800">Huisstijl (white-label)</h2>
-          <p className="mt-1 text-sm text-slate-500">
+        <Card className="mt-6 p-6">
+          <h2 className="font-semibold text-foreground">Huisstijl (white-label)</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
             Logo, naam en kleur die je leerlingen zien.
           </p>
           <form onSubmit={saveBranding} className="mt-4 space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700">Naam</label>
-              <input
+              <Label>Naam</Label>
+              <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 disabled={!isOwner}
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-sky-500 disabled:bg-slate-50"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700">
-                Tagline <span className="font-normal text-slate-400">(optioneel)</span>
-              </label>
-              <input
+              <Label>
+                Tagline <span className="font-normal text-muted-foreground">(optioneel)</span>
+              </Label>
+              <Input
                 value={tagline}
                 onChange={(e) => setTagline(e.target.value)}
                 disabled={!isOwner}
                 placeholder="Bijv. Bijles op maat"
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-sky-500 disabled:bg-slate-50"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700">
-                Logo-URL <span className="font-normal text-slate-400">(optioneel)</span>
-              </label>
-              <input
+              <Label>
+                Logo-URL <span className="font-normal text-muted-foreground">(optioneel)</span>
+              </Label>
+              <Input
                 value={logoUrl}
                 onChange={(e) => setLogoUrl(e.target.value)}
                 disabled={!isOwner}
                 placeholder="https://.../logo.png"
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-sky-500 disabled:bg-slate-50"
               />
             </div>
             <div className="flex items-center gap-3">
-              <label className="text-sm font-medium text-slate-700">Merkkleur</label>
+              <Label className="mb-0">Merkkleur</Label>
               <input
                 type="color"
                 value={brandColor}
                 onChange={(e) => setBrandColor(e.target.value)}
                 disabled={!isOwner}
-                className="h-9 w-14 cursor-pointer rounded border border-slate-300"
+                className="h-9 w-14 cursor-pointer rounded-lg border border-input"
               />
-              <span className="text-sm text-slate-500">{brandColor}</span>
+              <span className="text-sm text-muted-foreground">{brandColor}</span>
             </div>
 
             {isOwner && (
-              <button
-                type="submit"
-                disabled={busy}
-                style={{ backgroundColor: "var(--brand)" }}
-                className="rounded-lg px-4 py-2 text-sm font-medium text-white hover:brightness-95 disabled:opacity-60"
-              >
+              <Button type="submit" disabled={busy}>
                 {busy ? "Opslaan…" : saved ? "Opgeslagen ✓" : "Opslaan"}
-              </button>
+              </Button>
             )}
           </form>
-        </section>
+        </Card>
 
         {/* Domeinen */}
-        <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-6">
-          <h2 className="font-semibold text-slate-800">Eigen domein(en)</h2>
-          <p className="mt-1 text-sm text-slate-500">
+        <Card className="mt-6 p-6">
+          <h2 className="font-semibold text-foreground">Eigen domein(en)</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
             Koppel een domein zodat je leerlingen op jouw eigen webadres lesgeven.
             Het domein moet daarna nog via DNS naar Vercel wijzen.
           </p>
@@ -223,13 +215,14 @@ export default function Settings() {
             {domains.map((d) => (
               <li
                 key={d.id}
-                className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                className="flex items-center justify-between rounded-xl border border-border px-3 py-2 text-sm"
               >
-                <span className="font-medium text-slate-700">{d.hostname}</span>
+                <span className="font-medium text-foreground">{d.hostname}</span>
                 {isOwner && (
                   <button
                     onClick={() => removeDomain(d.id)}
-                    className="text-slate-400 hover:text-red-600"
+                    className="rounded-full p-1.5 text-muted-foreground transition hover:bg-muted hover:text-danger"
+                    aria-label="Verwijderen"
                   >
                     ✕
                   </button>
@@ -237,28 +230,24 @@ export default function Settings() {
               </li>
             ))}
             {domains.length === 0 && (
-              <li className="text-sm text-slate-400">Nog geen domein gekoppeld.</li>
+              <li className="text-sm text-muted-foreground">Nog geen domein gekoppeld.</li>
             )}
           </ul>
 
           {isOwner && (
             <div className="mt-3 flex gap-2">
-              <input
+              <Input
                 value={newDomain}
                 onChange={(e) => setNewDomain(e.target.value)}
                 placeholder="bijv. djelian.nl"
-                className="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-sky-500"
               />
-              <button
-                onClick={addDomain}
-                className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-              >
+              <Button onClick={addDomain} variant="secondary">
                 Toevoegen
-              </button>
+              </Button>
             </div>
           )}
-        </section>
-      </div>
+        </Card>
+      </Container>
     </main>
   );
 }
