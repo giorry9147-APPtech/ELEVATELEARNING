@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { stripe } from "@/lib/stripe/server";
+import { stripe, CONNECT_ACCOUNT_COL } from "@/lib/stripe/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -25,9 +25,12 @@ export async function GET() {
 
   const admin = createAdminClient();
   const { data: org } = admin
-    ? await admin.from("organizations").select("stripe_account_id").eq("id", orgId).maybeSingle()
+    ? await admin.from("organizations").select(CONNECT_ACCOUNT_COL).eq("id", orgId).maybeSingle()
     : { data: null };
-  const accountId = (org?.stripe_account_id as string | null) ?? null;
+  const accountId =
+    ((org as Record<string, string | null> | null)?.[CONNECT_ACCOUNT_COL] as
+      | string
+      | null) ?? null;
   if (!accountId) return NextResponse.json(off);
 
   try {
@@ -39,6 +42,7 @@ export async function GET() {
       detailsSubmitted: account.details_submitted,
     });
   } catch {
-    return NextResponse.json({ connected: true, chargesEnabled: false });
+    // Opgeslagen account bestaat niet in deze modus → behandel als niet gekoppeld.
+    return NextResponse.json(off);
   }
 }

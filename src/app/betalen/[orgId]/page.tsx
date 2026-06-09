@@ -1,6 +1,6 @@
 import PayShop, { type ShopPackage } from "@/components/PayShop";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { stripe } from "@/lib/stripe/server";
+import { stripe, CONNECT_ACCOUNT_COL } from "@/lib/stripe/server";
 import { Card } from "@/components/ui/Card";
 import { Container } from "@/components/ui/Container";
 
@@ -31,7 +31,7 @@ export default async function BetalenPage({
 
   const { data: org } = await admin
     .from("organizations")
-    .select("name, stripe_account_id")
+    .select(`name, ${CONNECT_ACCOUNT_COL}`)
     .eq("id", orgId)
     .maybeSingle();
 
@@ -47,7 +47,8 @@ export default async function BetalenPage({
     .order("position", { ascending: true });
 
   let canPay = false;
-  const accountId = (org.stripe_account_id as string | null) ?? null;
+  const accountId =
+    ((org as Record<string, string | null>)[CONNECT_ACCOUNT_COL] as string | null) ?? null;
   if (accountId && stripe) {
     try {
       const account = await stripe.accounts.retrieve(accountId);

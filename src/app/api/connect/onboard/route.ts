@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { stripe } from "@/lib/stripe/server";
+import { stripe, CONNECT_ACCOUNT_COL } from "@/lib/stripe/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { config } from "@/lib/config";
@@ -38,11 +38,25 @@ export async function POST(request: Request) {
 
   const { data: org } = await admin
     .from("organizations")
-    .select("stripe_account_id")
+    .select(CONNECT_ACCOUNT_COL)
     .eq("id", orgId)
     .maybeSingle();
 
-  let accountId = (org?.stripe_account_id as string | null) ?? undefined;
+  let accountId =
+    ((org as Record<string, string | null> | null)?.[CONNECT_ACCOUNT_COL] as
+      | string
+      | null) ?? undefined;
+
+  // Zelfherstel: bestaat het opgeslagen account niet (meer) in deze modus
+  // (bv. een test-account onder live-keys), maak dan een nieuw account.
+  if (accountId) {
+    try {
+      await stripe.accounts.retrieve(accountId);
+    } catch {
+      accountId = undefined;
+    }
+  }
+
   if (!accountId) {
     const account = await stripe.accounts.create({
       type: "express",
@@ -56,7 +70,10 @@ export async function POST(request: Request) {
       metadata: { org_id: orgId },
     });
     accountId = account.id;
-    await admin.from("organizations").update({ stripe_account_id: accountId }).eq("id", orgId);
+    await admin
+      .from("organizations")
+      .update({ [CONNECT_ACCOUNT_COL]: accountId })
+      .eq("id", orgId);
   }
 
   const link = await stripe.accountLinks.create({

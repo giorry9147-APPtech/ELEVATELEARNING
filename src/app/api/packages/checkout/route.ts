@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { stripe } from "@/lib/stripe/server";
+import { stripe, CONNECT_ACCOUNT_COL } from "@/lib/stripe/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { config } from "@/lib/config";
 
@@ -44,10 +44,13 @@ export async function POST(request: Request) {
 
   const { data: org } = await admin
     .from("organizations")
-    .select("stripe_account_id")
+    .select(CONNECT_ACCOUNT_COL)
     .eq("id", pkg.org_id)
     .maybeSingle();
-  const accountId = (org?.stripe_account_id as string | null) ?? null;
+  const accountId =
+    ((org as Record<string, string | null> | null)?.[CONNECT_ACCOUNT_COL] as
+      | string
+      | null) ?? null;
   if (!accountId) {
     return NextResponse.json(
       { error: "Deze docent heeft online betalen nog niet ingesteld." },
