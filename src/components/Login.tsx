@@ -5,6 +5,11 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { config } from "@/lib/config";
+import { BrandMark } from "@/components/BrandingProvider";
+import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Input, Label } from "@/components/ui/Input";
+import { SkyBackdrop } from "@/components/ui/SkyBackdrop";
 
 type Mode = "login" | "signup";
 
@@ -59,53 +64,51 @@ export default function Login() {
         );
         return;
       }
-      router.push("/dashboard");
+      // Nieuwe docenten gaan eerst door de onboarding-wizard.
+      router.push(mode === "signup" ? "/welkom" : "/dashboard");
     } finally {
       setBusy(false);
     }
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
-      <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-        <Link href="/" className="flex items-center gap-2 font-bold text-slate-800">
-          <span>📚</span> Bijles
-        </Link>
-        <h1 className="mt-6 text-xl font-bold text-slate-900">
+    <SkyBackdrop variant="green" objects className="flex min-h-screen flex-col items-center justify-center px-4 py-10">
+      <Link href="/" className="mb-6">
+        <BrandMark className="text-lg" />
+      </Link>
+      <Card className="w-full max-w-md p-8">
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">
           {mode === "login" ? "Inloggen" : "Account aanmaken"}
         </h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-muted-foreground">
           {mode === "login"
             ? "Log in met je e-mailadres en wachtwoord."
             : "Maak een account met je uitnodigingscode."}
         </p>
 
         {!config.supabase.enabled && (
-          <div className="mt-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-700">
+          <div className="mt-4 rounded-xl bg-amber-50 px-3 py-2 text-sm text-warning">
             Login is nog niet geactiveerd (Supabase-keys ontbreken).
           </div>
         )}
 
         <form onSubmit={submit} className="mt-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700">
-              E-mailadres
-            </label>
-            <input
+            <Label htmlFor="email">E-mailadres</Label>
+            <Input
+              id="email"
               type="email"
               required
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="jij@voorbeeld.nl"
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-sky-500"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700">
-              Wachtwoord
-            </label>
-            <input
+            <Label htmlFor="password">Wachtwoord</Label>
+            <Input
+              id="password"
               type="password"
               required
               minLength={6}
@@ -113,39 +116,32 @@ export default function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Minstens 6 tekens"
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-sky-500"
             />
           </div>
           {mode === "signup" && (
             <div>
-              <label className="block text-sm font-medium text-slate-700">
-                Uitnodigingscode
-              </label>
-              <input
+              <Label htmlFor="invite">Uitnodigingscode</Label>
+              <Input
+                id="invite"
                 value={inviteCode}
                 onChange={(e) => setInviteCode(e.target.value)}
                 placeholder="Bijv. TEAM-2026"
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-sky-500"
               />
             </div>
           )}
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-danger">{error}</p>}
 
-          <button
-            type="submit"
-            disabled={busy}
-            className="w-full rounded-lg bg-sky-600 px-4 py-2 font-medium text-white hover:bg-sky-700 disabled:opacity-60"
-          >
+          <Button type="submit" disabled={busy} fullWidth>
             {busy
               ? "Bezig…"
               : mode === "login"
                 ? "Inloggen"
                 : "Account aanmaken"}
-          </button>
+          </Button>
         </form>
 
-        <p className="mt-4 text-center text-sm text-slate-500">
+        <p className="mt-5 text-center text-sm text-muted-foreground">
           {mode === "login" ? (
             <>
               Nog geen account?{" "}
@@ -154,7 +150,7 @@ export default function Login() {
                   setMode("signup");
                   setError("");
                 }}
-                className="font-medium text-sky-600 hover:underline"
+                className="font-medium text-brand hover:underline"
               >
                 Aanmaken
               </button>
@@ -167,14 +163,14 @@ export default function Login() {
                   setMode("login");
                   setError("");
                 }}
-                className="font-medium text-sky-600 hover:underline"
+                className="font-medium text-brand hover:underline"
               >
                 Inloggen
               </button>
             </>
           )}
         </p>
-      </div>
-    </main>
+      </Card>
+    </SkyBackdrop>
   );
 }

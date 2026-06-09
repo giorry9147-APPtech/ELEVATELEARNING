@@ -16,7 +16,22 @@ White-label klanten (Djelian, Xiomara) krijgen eigen domein + huisstijl op
 **STATUS: het platform is COMMERCIEEL LIVE** — docenten kunnen zich aanmelden
 (invite-gated), abonneren via Stripe (iDEAL/kaart, echte betalingen), lesgeven
 met minuten-metering + blokkering, en white-label draaien. Fasen MVP t/m 4b + 8
-(AVG) zijn af. Resterend: 5 (dashboard), 6 (UI/UX), 7 (booking), 9 (Xiomara-module), 10 (admin).
+(AVG) zijn af. Resterend: 5 (dashboard), 6 (UI/UX — IN UITVOERING), 7 (booking), 9 (Xiomara-module), 10 (admin).
+
+**Fase 6 (UI/UX premium-overhaul) — IN UITVOERING (jun 2026):** design system in
+`src/components/ui/` (Button, Card, Input, Badge, Container/SectionHeading, icons,
+SkyBackdrop, ClassroomPreview) + tokens in `src/app/globals.css` (lucht/wolken-sfeer,
+Revolut-blauw via `--brand`, light-only, WCAG AA focus). Stijl-referentie: Vovy-landing
+(dromerige lucht + wolken + witte rond-afgeronde kaarten + pill-knoppen) vertaald naar
+school-thema. ✅ OMGEZET: landing, login/signup, prijzen+PricingTable, dashboard+BillingCard,
+settings, LegalShell, cookiebanner, klas-chrome (naam-gate + header). ✅ Onboarding-wizard
+(`/welkom`, `Onboarding.tsx`): 3 stappen (welkom → huisstijl met kleurpresets+live preview →
+eerste les), schrijft branding naar de org; nieuwe signups gaan na aanmaken naar `/welkom`
+(localStorage-vlag `bijles:onboarded`). Geen shadcn-CLI/Radix (eigen lichte primitives, geen
+extra deps). ✅ Diepe klas-panelen ook omgezet: Whiteboard-chrome (tabs/pagina-knop/sync-badge),
+Chat (echte chatbubbels eigen/merk vs ander/grijs), MathKeyboard, VideoPanel (iconen + Button;
+donkere video-overlays bewust slate-900 gehouden). Fase 6 = inhoudelijk KLAAR. Nog niet
+gecommit/gedeployed op moment van schrijven.
 
 ## 2. Locaties & toegang
 - **App-code:** `/Users/cornerstonetech/Desktop/WHITEBOARD/bijlesplatform/` (= repo-root)
@@ -45,10 +60,26 @@ Stripe Billing (abonnementen) · Resend (e-mail, nog te activeren) · gehost op 
 
 ## 5. Database-migraties (Supabase SQL Editor, in volgorde, idempotent)
 `supabase/schema.sql` (basis: profiles/invites/sessions) → `001_tenants.sql` →
-`002_whiteboards.sql` → `003_branding.sql` → `004_billing.sql`.
-**Status: alle 5 zijn door de gebruiker gedraaid** (004-tabellen geverifieerd aanwezig).
-Nieuwe migraties: maak `005_*.sql` etc. en laat de GEBRUIKER ze draaien (ik heb
+`002_whiteboards.sql` → `003_branding.sql` → `004_billing.sql` → `005_students.sql`
+→ `006_lesson_attendance.sql` → `007_packages.sql` → `008_connect.sql`.
+**Status: 001–004 + schema zijn gedraaid. NIEUW (Fase 5), moeten in volgorde door de
+GEBRUIKER in de Supabase SQL-editor gedraaid worden: `005_students.sql` (leerlingen-roster
++ CRM), `006_lesson_attendance.sql` (lessen↔leerlingen + aanwezigheid), `007_packages.sql`
+(prijs-/pakketbouwer) en `008_connect.sql` (Stripe Connect: stripe_account_id op
+organizations + package_purchases).** Tot dan tonen `/leerlingen`, de Lessen-kaart en
+`/tarieven` netjes "nog niet geactiveerd"/leeg (werkt-zonder-migratie).
+Nieuwe migraties: maak `009_*.sql` etc. en laat de GEBRUIKER ze draaien (ik heb
 geen Supabase Management-token meer).
+
+**Stripe Connect (Fase 5 — leerlingen betalen docent):** Express-accounts, DIRECTE charges
+op het docent-account (geld op zijn rekening, docent draagt Stripe-kosten, 0% platform-fee).
+Routes: `/api/connect/onboard` + `/status`, `/api/packages/checkout` (publiek) + `/finalize`.
+Publieke betaalpagina `/betalen/[orgId]` + succespagina `/betaald`. Docent regelt het op
+`/tarieven` (Connect-statuskaart + betaallink + "Recente verkopen"). **GEBRUIKER MOET: Stripe
+Connect aanzetten in het Stripe-dashboard (eerst TEST), platform-profiel/branding invullen,
+en 008 draaien.** Aankopen worden afgerond bij terugkeer (`/finalize`) — een Connect-webhook
+(checkout.session.completed) is een latere robuustheids-verbetering (anders blijft een aankoop
+"pending" als de leerling de tab sluit vóór terugkeer).
 
 ## 6. Keys & secrets (waar ze staan)
 Alles staat in `bijlesplatform/.env.local` (**gitignored**) én in **Vercel** (production+development):
@@ -86,7 +117,7 @@ na env-wijziging altijd opnieuw deployen.
 
 ## 9. Wat de gebruiker nog moet doen (handmatig)
 - ✅ Betaalflow in TEST is getest en werkt (bevestigd door gebruiker).
-- **Customer Portal in LIVE-mode activeren** in Stripe (Settings → Billing → Customer portal → Save). De test-mode-activatie geldt NIET voor live; anders faalt `/api/portal` in productie.
+- ✅ Customer Portal in LIVE-mode geactiveerd (bevestigd door gebruiker, jun 2026). `/api/portal` werkt in productie.
 - **Stripe-activatie helemaal afronden** als er nog stappen open staan (bank/verificatiedocument).
 - **Live betaalflow verifiëren** (optioneel, met echt geld): zelf Starter €19 nemen → plan+meter checken → daarna opzeggen/terugbetalen.
 - **Metering verifiëren:** een echte les draaien (ingelogd), afsluiten, dan meter checken (Daily `meeting.ended` → usage_ledger).

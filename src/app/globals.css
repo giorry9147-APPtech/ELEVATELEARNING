@@ -1,26 +1,188 @@
 @import "tailwindcss";
 
+/*
+ * Design system — "Helder klaslokaal"
+ * Premium lucht/wolken-sfeer, light-only, WCAG 2.2 AA.
+ * De primary-kleur loopt via --brand zodat white-label-tenants meekleuren
+ * (BrandingProvider zet --brand op het hostnaam/tenant-merk).
+ */
 :root {
+  /* Merk (runtime overschrijfbaar per tenant via --brand) — groen */
+  --brand: #15803d;
+  --brand-strong: #14532d;
+  --brand-soft: #dcf3e6;
+  --brand-foreground: #ffffff;
+  --accent: #7c3aed;
+
+  /* Oppervlakken & tekst */
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #0f1f3d;
+  --surface: #ffffff;
+  --muted: #f1f5f9;
+  --muted-foreground: #56657d;
+  --border: #e3e9f2;
+  --input: #cbd5e1;
+  --ring: var(--brand);
+
+  /* Status */
+  --success: #15803d;
+  --warning: #b45309;
+  --danger: #dc2626;
+
+  /* Lucht / wolken-sfeer */
+  --sky-1: #eff6ff;
+  --sky-2: #d6e8ff;
+  --sky-3: #e9e6ff;
 }
 
 @theme inline {
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-accent: var(--accent);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --color-surface: var(--surface);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+
+  --font-sans: var(--font-jakarta);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+@theme {
+  --shadow-soft: 0 1px 2px rgba(15, 42, 87, 0.04), 0 10px 30px -12px rgba(15, 42, 87, 0.18);
+  --shadow-soft-lg: 0 2px 6px rgba(15, 42, 87, 0.05), 0 30px 60px -20px rgba(15, 42, 87, 0.22);
+}
+
+/* Standaard randkleur -> zachte slate i.p.v. currentColor (shadcn-conventie) */
+*,
+::before,
+::after {
+  border-color: var(--border);
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-jakarta), system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--brand) 22%, transparent);
+}
+
+/* Toegankelijke focus voor toetsenbordgebruikers (WCAG 2.4.7 / 2.4.11) */
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* ---- Premium lucht/wolken-sfeerlaag ---- */
+.sky-backdrop {
+  background:
+    radial-gradient(38% 30% at 12% 16%, rgba(255, 255, 255, 0.85), transparent 62%),
+    radial-gradient(42% 32% at 86% 10%, rgba(255, 255, 255, 0.8), transparent 60%),
+    radial-gradient(64% 48% at 50% 116%, rgba(255, 255, 255, 0.92), transparent 72%),
+    linear-gradient(180deg, var(--sky-2) 0%, var(--sky-3) 24%, var(--sky-1) 52%, #ffffff 94%);
+}
+
+/* ---- Meeslepende blauwe hero-lucht (solide --brand + witte overlays) ---- */
+/* Bewust GEEN color-mix: één ongeldige waarde zou de hele background slopen. */
+.hero-sky {
+  background-color: var(--brand);
+  background-image:
+    radial-gradient(125% 45% at 50% 134%, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0) 60%),
+    radial-gradient(48% 42% at 88% 6%, rgba(255, 255, 255, 0.16), transparent 60%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0) 42%);
+}
+
+/* ---- Premium lichtgroene hero ---- */
+.hero-green {
+  background-color: #e9f9ef;
+  background-image:
+    radial-gradient(120% 130% at 50% 38%, rgba(255, 255, 255, 0) 58%, rgba(20, 110, 60, 0.1) 100%),
+    radial-gradient(58% 48% at 50% 6%, rgba(255, 255, 255, 0.75), transparent 62%),
+    radial-gradient(85% 55% at 50% 126%, rgba(255, 255, 255, 0.92), transparent 64%),
+    radial-gradient(46% 40% at 16% 26%, rgba(120, 222, 164, 0.55), transparent 62%),
+    radial-gradient(40% 38% at 88% 70%, rgba(120, 222, 164, 0.4), transparent 62%),
+    linear-gradient(180deg, #b6e7c6 0%, #d2f0dc 36%, #e7f8ed 66%, #ffffff 100%);
+}
+
+/* Premium groene primary-pill */
+.btn-green {
+  background-image: linear-gradient(180deg, #2bb673 0%, #1f9d60 55%, #15803d 100%);
+  color: #ffffff;
+  box-shadow:
+    0 8px 22px -8px rgba(21, 128, 61, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+.btn-green:hover {
+  filter: brightness(1.05);
+}
+.btn-green:active {
+  filter: brightness(0.97);
+}
+
+/* ---- Zwevende school-objecten (bewegend) ---- */
+@keyframes floaty {
+  0%,
+  100% {
+    transform: translateY(0) rotate(var(--rot, 0deg));
+  }
+  50% {
+    transform: translateY(-22px) rotate(calc(var(--rot, 0deg) + 5deg));
+  }
+}
+.floaty {
+  animation: floaty var(--dur, 7s) ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+  will-change: transform;
+}
+
+/* ---- Premium primary-pill met glans (gebruikt --brand) ---- */
+.btn-primary {
+  background-image: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--brand) 86%, #ffffff) 0%,
+    var(--brand) 52%,
+    var(--brand-strong) 100%
+  );
+  color: var(--brand-foreground);
+  box-shadow:
+    0 6px 18px -6px color-mix(in srgb, var(--brand) 55%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+.btn-primary:hover {
+  filter: brightness(1.05);
+}
+.btn-primary:active {
+  filter: brightness(0.97);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  * {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
 }
