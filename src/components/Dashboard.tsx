@@ -56,8 +56,8 @@ export default function Dashboard() {
   const mustLogin = enabled && !loading && !user;
 
   return (
-    <main className="min-h-screen flex-1 bg-muted/40">
-      <header className="border-b border-border bg-surface">
+    <main className="min-h-screen flex-1 app-surface">
+      <header className="app-header">
         <Container className="flex items-center justify-between py-4">
           <Link href="/">
             <BrandMark />

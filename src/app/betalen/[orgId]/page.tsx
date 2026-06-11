@@ -19,10 +19,13 @@ type PkgRow = {
 
 export default async function BetalenPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ orgId: string }>;
+  searchParams: Promise<{ pkg?: string }>;
 }) {
   const { orgId } = await params;
+  const { pkg } = await searchParams;
   const admin = createAdminClient();
 
   if (!admin) {
@@ -69,7 +72,14 @@ export default async function BetalenPage({
     hours: p.hours,
   }));
 
-  return <PayShop orgName={org.name as string} canPay={canPay} packages={packages} />;
+  return (
+    <PayShop
+      orgName={org.name as string}
+      canPay={canPay}
+      packages={packages}
+      initialPackageId={pkg}
+    />
+  );
 }
 
 function Notice({ text }: { text: string }) {

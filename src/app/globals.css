@@ -141,6 +141,24 @@ body {
   filter: brightness(0.97);
 }
 
+/* ---- Premium werkomgeving-achtergrond (dashboard/leerlingen/tarieven/etc.) ---- */
+.app-surface {
+  background:
+    radial-gradient(55% 36% at 50% -6%, rgba(21, 128, 61, 0.06), transparent 60%),
+    radial-gradient(40% 30% at 100% 0%, rgba(21, 128, 61, 0.04), transparent 55%),
+    linear-gradient(180deg, #f2faf5 0%, #f5f8f7 24%, #f6f8f9 100%);
+}
+
+/* Glas-sticky header voor de werkomgeving */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  background: color-mix(in srgb, #ffffff 78%, transparent);
+  backdrop-filter: blur(12px);
+}
+
 /* ---- Zwevende school-objecten (bewegend) ---- */
 @keyframes floaty {
   0%,

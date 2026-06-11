@@ -103,7 +103,7 @@ export default function Settings() {
 
   if (!loading && !user) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-muted/40 px-4">
+      <main className="flex min-h-screen items-center justify-center app-surface px-4">
         <Card className="p-10 text-center">
           <p className="text-muted-foreground">Log in om je instellingen te beheren.</p>
           <Link href="/login" className={buttonClasses({ size: "md", className: "mt-4" })}>
@@ -117,8 +117,8 @@ export default function Settings() {
   const isOwner = org?.role === "owner";
 
   return (
-    <main className="min-h-screen flex-1 bg-muted/40">
-      <header className="border-b border-border bg-surface">
+    <main className="min-h-screen flex-1 app-surface">
+      <header className="app-header">
         <Container size="md" className="flex items-center justify-between py-4">
           <Link href="/dashboard">
             <BrandMark />

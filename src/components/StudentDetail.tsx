@@ -184,8 +184,8 @@ export default function StudentDetail({ studentId }: { studentId: string }) {
   }
 
   return (
-    <main className="min-h-screen flex-1 bg-muted/40">
-      <header className="border-b border-border bg-surface">
+    <main className="min-h-screen flex-1 app-surface">
+      <header className="app-header">
         <Container className="flex items-center justify-between py-4">
           <Link href="/dashboard">
             <BrandMark />
@@ -451,7 +451,7 @@ export default function StudentDetail({ studentId }: { studentId: string }) {
 
 function Centered({ children }: { children: React.ReactNode }) {
   return (
-    <main className="flex min-h-screen flex-1 items-center justify-center bg-muted/40 px-4">
+    <main className="flex min-h-screen flex-1 items-center justify-center app-surface px-4">
       <Card className="p-10 text-center">{children}</Card>
     </main>
   );

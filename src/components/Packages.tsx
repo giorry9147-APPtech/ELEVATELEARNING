@@ -58,6 +58,7 @@ export default function Packages() {
   const [connecting, setConnecting] = useState(false);
   const [connectError, setConnectError] = useState("");
   const [copied, setCopied] = useState(false);
+  const [copiedPkg, setCopiedPkg] = useState<string | null>(null);
 
   useEffect(() => {
     if (loading) return;
@@ -102,6 +103,13 @@ export default function Packages() {
     await navigator.clipboard.writeText(payUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
+  };
+
+  const copyPkgLink = async (id: string) => {
+    if (typeof window === "undefined" || !orgId) return;
+    await navigator.clipboard.writeText(`${window.location.origin}/betalen/${orgId}?pkg=${id}`);
+    setCopiedPkg(id);
+    setTimeout(() => setCopiedPkg(null), 1500);
   };
 
   const openNew = () => {
@@ -183,8 +191,8 @@ export default function Packages() {
   const mustLogin = enabled && !loading && !user;
 
   return (
-    <main className="min-h-screen flex-1 bg-muted/40">
-      <header className="border-b border-border bg-surface">
+    <main className="min-h-screen flex-1 app-surface">
+      <header className="app-header">
         <Container className="flex items-center justify-between py-4">
           <Link href="/dashboard">
             <BrandMark />
@@ -437,7 +445,12 @@ export default function Packages() {
                   {p.description && (
                     <p className="mt-3 text-sm text-muted-foreground">{p.description}</p>
                   )}
-                  <div className="mt-4 flex items-center gap-2 pt-1">
+                  <div className="mt-4 flex flex-wrap items-center gap-2 pt-1">
+                    {p.active && (
+                      <Button size="sm" onClick={() => copyPkgLink(p.id)}>
+                        {copiedPkg === p.id ? "Link gekopieerd!" : "Betaallink"}
+                      </Button>
+                    )}
                     <Button variant="secondary" size="sm" onClick={() => openEdit(p)}>
                       Bewerken
                     </Button>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Container, SectionHeading } from "@/components/ui/Container";
 import { SkyBackdrop } from "@/components/ui/SkyBackdrop";
 import { Card } from "@/components/ui/Card";
@@ -28,16 +28,40 @@ export default function PayShop({
   orgName,
   canPay,
   packages,
+  initialPackageId,
 }: {
   orgName: string;
   canPay: boolean;
   packages: ShopPackage[];
+  initialPackageId?: string;
 }) {
   const [selected, setSelected] = useState<ShopPackage | null>(null);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+
+  // Diep-link: ?pkg=<id> selecteert meteen het juiste pakket.
+  useEffect(() => {
+    if (!initialPackageId) return;
+    const p = packages.find((x) => x.id === initialPackageId);
+    if (p) {
+      setSelected(p);
+      setTimeout(
+        () => document.getElementById("betaalform")?.scrollIntoView({ behavior: "smooth", block: "center" }),
+        80,
+      );
+    }
+  }, [initialPackageId, packages]);
+
+  const choose = (p: ShopPackage) => {
+    setSelected(p);
+    setError("");
+    setTimeout(
+      () => document.getElementById("betaalform")?.scrollIntoView({ behavior: "smooth", block: "center" }),
+      50,
+    );
+  };
 
   const pay = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -109,15 +133,8 @@ export default function PayShop({
                 {p.description && (
                   <p className="mt-3 text-sm text-muted-foreground">{p.description}</p>
                 )}
-                <Button
-                  className="mt-4"
-                  disabled={!canPay}
-                  onClick={() => {
-                    setSelected(p);
-                    setError("");
-                  }}
-                >
-                  Kies dit pakket
+                <Button className="mt-4" disabled={!canPay} onClick={() => choose(p)}>
+                  Betalen · {fmt(p.priceCents, p.currency)}
                 </Button>
               </Card>
             ))}
@@ -126,7 +143,7 @@ export default function PayShop({
 
         {/* Betaal-formulier voor het gekozen pakket */}
         {selected && (
-          <Card className="mt-6 p-6">
+          <Card id="betaalform" className="mt-6 p-6">
             <p className="text-sm text-muted-foreground">Gekozen pakket</p>
             <div className="mt-1 flex items-baseline justify-between">
               <h3 className="font-semibold text-foreground">{selected.name}</h3>
