@@ -57,31 +57,37 @@ export async function POST(request: Request) {
     }
   }
 
-  if (!accountId) {
-    const account = await stripe.accounts.create({
-      type: "express",
-      country: "NL",
-      email: user.email ?? undefined,
-      business_type: "individual",
-      capabilities: {
-        card_payments: { requested: true },
-        transfers: { requested: true },
-      },
-      metadata: { org_id: orgId },
+  try {
+    if (!accountId) {
+      const account = await stripe.accounts.create({
+        type: "express",
+        country: "NL",
+        email: user.email ?? undefined,
+        business_type: "individual",
+        capabilities: {
+          card_payments: { requested: true },
+          transfers: { requested: true },
+        },
+        metadata: { org_id: orgId },
+      });
+      accountId = account.id;
+      await admin
+        .from("organizations")
+        .update({ [CONNECT_ACCOUNT_COL]: accountId })
+        .eq("id", orgId);
+    }
+
+    const link = await stripe.accountLinks.create({
+      account: accountId,
+      refresh_url: `${base}/tarieven?connect=refresh`,
+      return_url: `${base}/tarieven?connect=done`,
+      type: "account_onboarding",
     });
-    accountId = account.id;
-    await admin
-      .from("organizations")
-      .update({ [CONNECT_ACCOUNT_COL]: accountId })
-      .eq("id", orgId);
+
+    return NextResponse.json({ url: link.url });
+  } catch (e) {
+    // Geef de echte Stripe-reden terug (bv. "Connect niet ingeschakeld in live").
+    const message = e instanceof Error ? e.message : "Onbekende fout bij Stripe.";
+    return NextResponse.json({ error: message }, { status: 400 });
   }
-
-  const link = await stripe.accountLinks.create({
-    account: accountId,
-    refresh_url: `${base}/tarieven?connect=refresh`,
-    return_url: `${base}/tarieven?connect=done`,
-    type: "account_onboarding",
-  });
-
-  return NextResponse.json({ url: link.url });
 }

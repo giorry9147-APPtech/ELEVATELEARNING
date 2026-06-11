@@ -56,6 +56,7 @@ export default function Packages() {
   const [orgId, setOrgId] = useState<string | null>(null);
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [connecting, setConnecting] = useState(false);
+  const [connectError, setConnectError] = useState("");
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -78,14 +79,19 @@ export default function Packages() {
 
   const startOnboarding = async () => {
     setConnecting(true);
+    setConnectError("");
     try {
       const res = await fetch("/api/connect/onboard", { method: "POST" });
       const data = await res.json();
-      if (data?.url) window.location.href = data.url;
-      else setConnecting(false);
+      if (data?.url) {
+        window.location.href = data.url;
+        return;
+      }
+      setConnectError(data?.error || "Kon de onboarding niet starten.");
     } catch {
-      setConnecting(false);
+      setConnectError("Er ging iets mis. Probeer het opnieuw.");
     }
+    setConnecting(false);
   };
 
   const payUrl =
@@ -239,6 +245,12 @@ export default function Packages() {
                 </Button>
               )}
             </div>
+
+            {connectError && (
+              <p className="mt-3 rounded-xl bg-amber-50 px-3 py-2 text-sm text-warning">
+                {connectError}
+              </p>
+            )}
 
             {/* Betaallink (altijd zichtbaar om te delen/previewen) */}
             {payUrl && (
