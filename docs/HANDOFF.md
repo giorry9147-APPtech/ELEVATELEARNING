@@ -61,14 +61,15 @@ Stripe Billing (abonnementen) · Resend (e-mail, nog te activeren) · gehost op 
 ## 5. Database-migraties (Supabase SQL Editor, in volgorde, idempotent)
 `supabase/schema.sql` (basis: profiles/invites/sessions) → `001_tenants.sql` →
 `002_whiteboards.sql` → `003_branding.sql` → `004_billing.sql` → `005_students.sql`
-→ `006_lesson_attendance.sql` → `007_packages.sql` → `008_connect.sql`.
-**Status: 001–004 + schema zijn gedraaid. NIEUW (Fase 5), moeten in volgorde door de
-GEBRUIKER in de Supabase SQL-editor gedraaid worden: `005_students.sql` (leerlingen-roster
-+ CRM), `006_lesson_attendance.sql` (lessen↔leerlingen + aanwezigheid), `007_packages.sql`
-(prijs-/pakketbouwer) en `008_connect.sql` (Stripe Connect: stripe_account_id op
-organizations + package_purchases).** Tot dan tonen `/leerlingen`, de Lessen-kaart en
-`/tarieven` netjes "nog niet geactiveerd"/leeg (werkt-zonder-migratie).
-Nieuwe migraties: maak `009_*.sql` etc. en laat de GEBRUIKER ze draaien (ik heb
+→ `006_lesson_attendance.sql` → `007_packages.sql` → `008_connect.sql`
+→ `009_connect_test.sql` → `010_bookings.sql`.
+**Status: 001–004 + schema zijn gedraaid. NIEUW, in volgorde door de GEBRUIKER te draaien:
+`005_students.sql` (CRM), `006_lesson_attendance.sql` (lessen↔leerlingen), `007_packages.sql`
+(pakketbouwer), `008_connect.sql` (Stripe Connect), `009_connect_test.sql` (stripe_account_id_test
+voor test/live-scheiding — anders werkt Connect lokaal niet), `010_bookings.sql` (Fase 7:
+availability + bookings + lesson_minutes op organizations).** Tot dan tonen de bijbehorende
+pagina's netjes "nog niet geactiveerd"/leeg (werkt-zonder-migratie).
+Nieuwe migraties: maak `011_*.sql` etc. en laat de GEBRUIKER ze draaien (ik heb
 geen Supabase Management-token meer).
 
 **Stripe Connect (Fase 5 — leerlingen betalen docent):** Express-accounts, DIRECTE charges

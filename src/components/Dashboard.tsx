@@ -71,6 +71,9 @@ export default function Dashboard() {
                 <Link href="/leerlingen" className={buttonClasses({ variant: "secondary", size: "sm" })}>
                   Leerlingen
                 </Link>
+                <Link href="/rooster" className={buttonClasses({ variant: "secondary", size: "sm" })}>
+                  Rooster
+                </Link>
                 <Link href="/tarieven" className={buttonClasses({ variant: "secondary", size: "sm" })}>
                   Tarieven
                 </Link>
