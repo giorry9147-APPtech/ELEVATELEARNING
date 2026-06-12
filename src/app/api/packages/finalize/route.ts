@@ -29,6 +29,7 @@ export async function POST(request: Request) {
   const paid = session.payment_status === "paid";
 
   const admin = createAdminClient();
+  let roomId: string | null = null;
   if (paid && admin) {
     const email = (session.metadata?.buyer_email as string) || session.customer_email || null;
     const orgId = (session.metadata?.org_id as string) || null;
@@ -45,15 +46,27 @@ export async function POST(request: Request) {
       studentId = (stu?.id as string) ?? null;
     }
 
-    await admin
-      .from("package_purchases")
-      .update({ status: "paid", student_id: studentId })
-      .eq("stripe_session_id", sessionId);
+    if (session.metadata?.type === "booking") {
+      // Boeking bevestigen + leslink teruggeven.
+      const { data: bk } = await admin
+        .from("bookings")
+        .update({ status: "confirmed", student_id: studentId })
+        .eq("stripe_session_id", sessionId)
+        .select("room_id")
+        .maybeSingle();
+      roomId = (bk?.room_id as string) ?? (session.metadata?.room_id as string) ?? null;
+    } else {
+      await admin
+        .from("package_purchases")
+        .update({ status: "paid", student_id: studentId })
+        .eq("stripe_session_id", sessionId);
+    }
   }
 
   return NextResponse.json({
     paid,
     amount: session.amount_total,
     currency: session.currency,
+    roomId,
   });
 }

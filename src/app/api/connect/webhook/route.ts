@@ -46,10 +46,17 @@ export async function POST(request: Request) {
         studentId = (stu?.id as string) ?? null;
       }
     }
-    await admin!
-      .from("package_purchases")
-      .update(status === "paid" ? { status: "paid", student_id: studentId } : { status: "failed" })
-      .eq("stripe_session_id", session.id);
+    if (session.metadata?.type === "booking") {
+      await admin!
+        .from("bookings")
+        .update(status === "paid" ? { status: "confirmed", student_id: studentId } : { status: "cancelled" })
+        .eq("stripe_session_id", session.id);
+    } else {
+      await admin!
+        .from("package_purchases")
+        .update(status === "paid" ? { status: "paid", student_id: studentId } : { status: "failed" })
+        .eq("stripe_session_id", session.id);
+    }
   }
 
   switch (event.type) {

@@ -10,6 +10,8 @@ import {
   saveAvailability,
   getLessonMinutes,
   setLessonMinutes,
+  getBookingPrice,
+  setBookingPrice,
   listBookings,
   cancelBooking,
   type Booking,
@@ -47,6 +49,7 @@ export default function Schedule() {
   const [avail, setAvail] = useState<WindowDef[] | null | undefined>(undefined);
   const [dayState, setDayState] = useState<Record<number, DayState>>(emptyDays());
   const [lessonMin, setLessonMin] = useState(60);
+  const [priceEur, setPriceEur] = useState("0");
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -56,6 +59,7 @@ export default function Schedule() {
     if (loading || !user) return;
     getCurrentOrg().then((o) => setOrgId(o?.id ?? null));
     getLessonMinutes().then(setLessonMin);
+    getBookingPrice().then((c) => setPriceEur(c ? (c / 100).toString().replace(".", ",") : "0"));
     listBookings().then(setBookings);
     getAvailability().then((w) => {
       setAvail(w);
@@ -85,6 +89,7 @@ export default function Schedule() {
     }
     await saveAvailability(windows);
     await setLessonMinutes(lessonMin);
+    await setBookingPrice(Math.round(parseFloat(priceEur.replace(",", ".") || "0") * 100));
     setSaving(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 1500);
@@ -149,8 +154,9 @@ export default function Schedule() {
             {/* Beschikbaarheid */}
             <div className="space-y-6">
               <Card className="p-6">
-                <h2 className="font-semibold text-foreground">Lesduur</h2>
-                <div className="mt-3 flex flex-wrap gap-2">
+                <h2 className="font-semibold text-foreground">Les &amp; prijs</h2>
+                <p className="mt-3 text-sm font-medium text-foreground">Lesduur</p>
+                <div className="mt-2 flex flex-wrap gap-2">
                   {DURATIONS.map((m) => (
                     <button
                       key={m}
@@ -165,6 +171,23 @@ export default function Schedule() {
                       {m} min
                     </button>
                   ))}
+                </div>
+
+                <div className="mt-4 max-w-xs">
+                  <p className="mb-1.5 text-sm font-medium text-foreground">
+                    Prijs per les (€){" "}
+                    <span className="font-normal text-muted-foreground">— 0 = gratis boeken</span>
+                  </p>
+                  <Input
+                    inputMode="decimal"
+                    value={priceEur}
+                    onChange={(e) => setPriceEur(e.target.value)}
+                    placeholder="0"
+                  />
+                  <p className="mt-1.5 text-xs text-muted-foreground">
+                    Bij een prijs &gt; 0 rekent de leerling direct af (vereist actieve uitbetaling op{" "}
+                    <Link href="/tarieven" className="text-brand underline">Tarieven</Link>).
+                  </p>
                 </div>
               </Card>
 

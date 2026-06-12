@@ -1,5 +1,6 @@
 import BookingFlow from "@/components/BookingFlow";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { stripe, CONNECT_ACCOUNT_COL } from "@/lib/stripe/server";
 import { Card } from "@/components/ui/Card";
 import { Container } from "@/components/ui/Container";
 
@@ -16,10 +17,24 @@ export default async function BoekenPage({
 
   const { data: org } = await admin
     .from("organizations")
-    .select("name, lesson_minutes")
+    .select(`name, lesson_minutes, booking_price_cents, ${CONNECT_ACCOUNT_COL}`)
     .eq("id", orgId)
     .maybeSingle();
   if (!org) return <Notice text="Deze boekingspagina bestaat niet." />;
+
+  // Kan de leerling direct afrekenen? (prijs > 0 én Connect actief)
+  const priceCents = (org.booking_price_cents as number) ?? 0;
+  let canPay = false;
+  const accountId =
+    ((org as Record<string, string | null>)[CONNECT_ACCOUNT_COL] as string | null) ?? null;
+  if (priceCents > 0 && accountId && stripe) {
+    try {
+      const account = await stripe.accounts.retrieve(accountId);
+      canPay = account.charges_enabled;
+    } catch {
+      canPay = false;
+    }
+  }
 
   const { data: avail } = await admin
     .from("availability")
@@ -47,6 +62,7 @@ export default async function BoekenPage({
       windows={windows}
       bookedStarts={bookedStarts}
       lessonMin={(org.lesson_minutes as number) ?? 60}
+      priceCents={canPay ? priceCents : 0}
     />
   );
 }

@@ -70,6 +70,32 @@ export async function getLessonMinutes(): Promise<number> {
   return (data?.lesson_minutes as number) ?? 60;
 }
 
+/** Prijs (centen) voor één geboekte les. 0 = gratis boeken. */
+export async function getBookingPrice(): Promise<number> {
+  const supabase = createClient();
+  if (!supabase) return 0;
+  const id = await orgId();
+  if (!id) return 0;
+  const { data } = await supabase
+    .from("organizations")
+    .select("booking_price_cents")
+    .eq("id", id)
+    .maybeSingle();
+  return (data?.booking_price_cents as number) ?? 0;
+}
+
+export async function setBookingPrice(cents: number): Promise<boolean> {
+  const supabase = createClient();
+  if (!supabase) return false;
+  const id = await orgId();
+  if (!id) return false;
+  const { error } = await supabase
+    .from("organizations")
+    .update({ booking_price_cents: Math.max(0, Math.round(cents)) })
+    .eq("id", id);
+  return !error;
+}
+
 export async function setLessonMinutes(min: number): Promise<boolean> {
   const supabase = createClient();
   if (!supabase) return false;

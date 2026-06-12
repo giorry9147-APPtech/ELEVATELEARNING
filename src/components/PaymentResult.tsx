@@ -14,9 +14,10 @@ export default function PaymentResult() {
   const sessionId = params.get("session_id");
   const acct = params.get("acct");
   const [state, setState] = useState<"loading" | "paid" | "pending">("loading");
-  const [info, setInfo] = useState<{ amount: number | null; currency: string | null }>({
+  const [info, setInfo] = useState<{ amount: number | null; currency: string | null; roomId: string | null }>({
     amount: null,
     currency: null,
+    roomId: null,
   });
 
   useEffect(() => {
@@ -32,7 +33,7 @@ export default function PaymentResult() {
       .then((r) => r.json())
       .then((d) => {
         setState(d?.paid ? "paid" : "pending");
-        setInfo({ amount: d?.amount ?? null, currency: d?.currency ?? null });
+        setInfo({ amount: d?.amount ?? null, currency: d?.currency ?? null, roomId: d?.roomId ?? null });
       })
       .catch(() => setState("pending"));
   }, [sessionId, acct]);
@@ -55,11 +56,19 @@ export default function PaymentResult() {
               <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-green-50 text-success">
                 <CheckIcon size={30} />
               </span>
-              <h1 className="mt-4 text-2xl font-bold tracking-tight text-foreground">Betaling gelukt</h1>
+              <h1 className="mt-4 text-2xl font-bold tracking-tight text-foreground">
+                {info.roomId ? "Les geboekt & betaald" : "Betaling gelukt"}
+              </h1>
               <p className="mt-2 text-muted-foreground">
-                Bedankt! Je betaling{amount ? ` van ${amount}` : ""} is ontvangen. Je docent neemt
-                contact op om de lessen in te plannen.
+                {info.roomId
+                  ? `Bedankt! Je betaling${amount ? ` van ${amount}` : ""} is ontvangen en je les staat vast.`
+                  : `Bedankt! Je betaling${amount ? ` van ${amount}` : ""} is ontvangen. Je docent neemt contact op om de lessen in te plannen.`}
               </p>
+              {info.roomId && (
+                <Link href={`/klas/${info.roomId}`} className={buttonClasses({ size: "lg", className: "mt-4" })}>
+                  Open de les
+                </Link>
+              )}
             </>
           ) : (
             <>

@@ -11,18 +11,24 @@ import { Input, Label } from "@/components/ui/Input";
 import { cn } from "@/components/ui/cn";
 import { GraduationIcon, CalendarIcon, CheckIcon, ClockIcon } from "@/components/ui/icons";
 
+function fmt(cents: number) {
+  return new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR" }).format(cents / 100);
+}
+
 export default function BookingFlow({
   orgId,
   orgName,
   windows,
   bookedStarts,
   lessonMin,
+  priceCents = 0,
 }: {
   orgId: string;
   orgName: string;
   windows: WindowDef[];
   bookedStarts: number[];
   lessonMin: number;
+  priceCents?: number;
 }) {
   // Slots client-side berekenen (lokale tijdzone; voorkomt SSR/UTC-mismatch).
   const [days, setDays] = useState<DaySlots[] | null>(null);
@@ -43,14 +49,24 @@ export default function BookingFlow({
     setBusy(true);
     setError("");
     try {
-      const res = await fetch("/api/bookings/create", {
+      const endpoint = priceCents > 0 ? "/api/bookings/checkout" : "/api/bookings/create";
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ orgId, startMs: selected, name, email }),
       });
       const data = await res.json();
-      if (data?.roomId) setDone({ roomId: data.roomId, startsAt: data.startsAt });
-      else setError(data?.error ?? "Boeken lukt nu niet.");
+      if (priceCents > 0) {
+        if (data?.url) {
+          window.location.href = data.url; // door naar Stripe
+          return;
+        }
+        setError(data?.error ?? "Boeken/betalen lukt nu niet.");
+      } else if (data?.roomId) {
+        setDone({ roomId: data.roomId, startsAt: data.startsAt });
+      } else {
+        setError(data?.error ?? "Boeken lukt nu niet.");
+      }
     } catch {
       setError("Er ging iets mis. Probeer het later opnieuw.");
     } finally {
@@ -97,7 +113,9 @@ export default function BookingFlow({
           </div>
           <SectionHeading
             title="Plan je les in"
-            description={`Kies een vrij moment. Een les duurt ${lessonMin} minuten.`}
+            description={`Kies een vrij moment. Een les duurt ${lessonMin} minuten${
+              priceCents > 0 ? ` · ${fmt(priceCents)} per les` : ""
+            }.`}
           />
         </Container>
       </SkyBackdrop>
@@ -170,8 +188,17 @@ export default function BookingFlow({
               {error && <p className="text-sm text-danger sm:col-span-2">{error}</p>}
               <div className="sm:col-span-2">
                 <Button type="submit" disabled={busy} fullWidth size="lg">
-                  {busy ? "Bezig…" : "Bevestig boeking"}
+                  {busy
+                    ? "Bezig…"
+                    : priceCents > 0
+                      ? `Boek & betaal ${fmt(priceCents)}`
+                      : "Bevestig boeking"}
                 </Button>
+                {priceCents > 0 && (
+                  <p className="mt-2 text-center text-xs text-muted-foreground">
+                    Je wordt veilig doorgestuurd naar Stripe (iDEAL of creditcard).
+                  </p>
+                )}
               </div>
             </form>
           </Card>
