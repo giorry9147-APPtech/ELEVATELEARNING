@@ -77,6 +77,9 @@ export default function Dashboard() {
                 <Link href="/tarieven" className={buttonClasses({ variant: "secondary", size: "sm" })}>
                   Tarieven
                 </Link>
+                <Link href="/ai" className={buttonClasses({ variant: "secondary", size: "sm" })}>
+                  AI-maatje
+                </Link>
                 <Link href="/settings" className={buttonClasses({ variant: "secondary", size: "sm" })}>
                   Instellingen
                 </Link>
