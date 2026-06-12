@@ -15,23 +15,22 @@ White-label klanten (Djelian, Xiomara) krijgen eigen domein + huisstijl op
 
 **STATUS: het platform is COMMERCIEEL LIVE** — docenten kunnen zich aanmelden
 (invite-gated), abonneren via Stripe (iDEAL/kaart, echte betalingen), lesgeven
-met minuten-metering + blokkering, en white-label draaien. Fasen MVP t/m 4b + 8
-(AVG) zijn af. Resterend: 5 (dashboard), 6 (UI/UX — IN UITVOERING), 7 (booking), 9 (Xiomara-module), 10 (admin).
+met minuten-metering + blokkering, en white-label draaien. **Volledig afvink-overzicht
+(gedaan / nog te doen): zie sectie 10.**
 
-**Fase 6 (UI/UX premium-overhaul) — IN UITVOERING (jun 2026):** design system in
-`src/components/ui/` (Button, Card, Input, Badge, Container/SectionHeading, icons,
-SkyBackdrop, ClassroomPreview) + tokens in `src/app/globals.css` (lucht/wolken-sfeer,
-Revolut-blauw via `--brand`, light-only, WCAG AA focus). Stijl-referentie: Vovy-landing
-(dromerige lucht + wolken + witte rond-afgeronde kaarten + pill-knoppen) vertaald naar
-school-thema. ✅ OMGEZET: landing, login/signup, prijzen+PricingTable, dashboard+BillingCard,
-settings, LegalShell, cookiebanner, klas-chrome (naam-gate + header). ✅ Onboarding-wizard
-(`/welkom`, `Onboarding.tsx`): 3 stappen (welkom → huisstijl met kleurpresets+live preview →
-eerste les), schrijft branding naar de org; nieuwe signups gaan na aanmaken naar `/welkom`
-(localStorage-vlag `bijles:onboarded`). Geen shadcn-CLI/Radix (eigen lichte primitives, geen
-extra deps). ✅ Diepe klas-panelen ook omgezet: Whiteboard-chrome (tabs/pagina-knop/sync-badge),
-Chat (echte chatbubbels eigen/merk vs ander/grijs), MathKeyboard, VideoPanel (iconen + Button;
-donkere video-overlays bewust slate-900 gehouden). Fase 6 = inhoudelijk KLAAR. Nog niet
-gecommit/gedeployed op moment van schrijven.
+**Belangrijke wijzigingen sinds go-live (jun 2026):**
+- **Huisstijl = GROEN** (niet meer Revolut-blauw). `--brand` = groen `#15803d`; premium
+  lichtgroene hero met **bewegende school-objecten**, **zwevende navbar-pill**, lettertype
+  **Plus Jakarta Sans**, eigen **logo** (`LogoMark` — vulpen uit open boek, SVG). Design system
+  in `src/components/ui/`, tokens + `.hero-green`/`.btn-green`/`.app-surface`/`.app-header` in
+  `globals.css`. Fase 6 = KLAAR (alle pagina's + klas-panelen + onboarding `/welkom`).
+- **Fase 5 (CRM + tarieven + Stripe Connect)** = KLAAR & live (Connect-onboarding werkt echt).
+- **Fase 7 (booking & rooster + boeken-en-betalen)** = KLAAR.
+- **AI-laag (huiswerkmaatje)** = KLAAR (key nodig, zie sectie 9).
+- **LET OP — branch:** al dit werk staat op **feature-branch `fase5-6-groen-crm-connect`** en is
+  via `vercel --prod` naar productie gedeployed, **MAAR de PR naar `main` is nog NIET gemerged**
+  → `main` op GitHub loopt achter op productie. PR mergen via de GitHub-UI (branch
+  `fase5-6-groen-crm-connect` → `main`).
 
 ## 2. Locaties & toegang
 - **App-code:** `/Users/cornerstonetech/Desktop/WHITEBOARD/bijlesplatform/` (= repo-root)
@@ -58,6 +57,21 @@ Stripe Billing (abonnementen) · Resend (e-mail, nog te activeren) · gehost op 
 - **Fase 8 — AVG/juridisch:** pagina's `/privacy`, `/voorwaarden`, `/cookies` (component `LegalShell`), cookiebanner (`CookieBanner`, alleen essentiële cookies) in layout, footer-links op de landing. Bedrijfsgegevens centraal in `src/lib/legal.ts` (Cornerstone Tech, ingevuld). Voorwaarden bevatten softwareleverancier-clausule (docent verantwoordelijk voor de les). LET OP: teksten zijn een sjabloon — gebruiker laat ze nog door een jurist nakijken.
 - **GO-LIVE (Stripe productie):** live producten/prijzen + live webhook aangemaakt in het live-account; Vercel-productie draait op live keys; `.env.local` blijft test. Account is geactiveerd (charges_enabled). Echte betalingen werken.
 
+### 4b. Code-kaart van het nieuwe werk (Fase 5/6/7 + AI) — waar staat wat
+> Alles hieronder staat op branch `fase5-6-groen-crm-connect` (live in productie, `main` nog niet gemerged).
+
+**Fase 6 — groene design system** (`src/components/ui/`): `cn`, `Button`(+`buttonClasses`), `Card`(+`GlassCard`, `as`-prop), `Input`/`Label`/`Textarea`, `Badge`, `Container`/`SectionHeading`(`tone`), `icons` (school-line-iconen), `SkyBackdrop`(`variant` pale|vivid|green + `objects`)/`Clouds`, `FloatingObjects` (zwevende emoji), `ClassroomPreview` (product-mock), `Logo` (`LogoMark`, SVG-merklogo). Tokens + `.hero-green`/`.btn-green`/`.app-surface`/`.app-header`/`.floaty` in `globals.css`. Lettertype Plus Jakarta Sans in `layout.tsx` (`--font-jakarta`). `BrandMark` (in `BrandingProvider`) toont `LogoMark`, met `tone="light"` voor donkere achtergrond. `LandingNav` heeft `onDark`/`accent`-props.
+
+**Fase 5 — CRM:** routes `/leerlingen` (`Students.tsx`) + `/leerlingen/[id]` (`StudentDetail.tsx`). Lib `src/lib/students.ts` (students + student_notes) en `src/lib/lessons.ts` (lesson_attendance: koppelen/aanwezigheid/stats + `startLessonForStudent`). Migraties 005 + 006.
+
+**Fase 5 — tarieven + Stripe Connect:** route `/tarieven` (`Packages.tsx`). Lib `src/lib/packages.ts` (lesson_packages + purchases). Publiek `/betalen/[orgId]` (`PayShop.tsx`) → `/betaald` (`PaymentResult.tsx`). API: `/api/connect/onboard`+`/status`+`/webhook`, `/api/packages/checkout`+`/finalize`. **Connect-helper in `src/lib/stripe/server.ts`:** `stripeIsLive` (op key-prefix) + `CONNECT_ACCOUNT_COL` (= `stripe_account_id` in live, `stripe_account_id_test` in test) — test/live-accounts worden gescheiden bewaard (migratie 009), en `onboard` maakt automatisch een nieuw account als het opgeslagen ID niet in de huidige modus bestaat. Migraties 007 + 008 + 009.
+
+**Fase 7 — booking:** route `/rooster` (`Schedule.tsx`, docent) + publiek `/boeken/[orgId]` (`BookingFlow.tsx`). Lib `src/lib/booking.ts` (availability/bookings/prijs) + `src/lib/slots.ts` (PURE slot-generatie, **lokale tijdzone → client-side berekenen**, NL-aanname). API: `/api/bookings/create` (gratis) + `/api/bookings/checkout` (boeken+betalen via Connect). Migraties 010 + 011.
+
+**AI-laag:** route `/ai` (`AiTutor.tsx`). Lib `src/lib/ai.ts` (server-only: Claude-client + NL-systeemprompts). API: `/api/ai/chat` (streaming) + `/api/ai/tools` (samenvatting/oefenvragen). Dependency **`@anthropic-ai/sdk`** toegevoegd (uitzondering op "geen extra deps").
+
+**Werkruimte-pagina's** (dashboard/leerlingen/rooster/tarieven/settings/ai) gebruiken `.app-surface` + `.app-header` (glas-sticky). Dashboard-header linkt naar Leerlingen/Rooster/Tarieven/AI-maatje/Instellingen.
+
 ## 5. Database-migraties (Supabase SQL Editor, in volgorde, idempotent)
 `supabase/schema.sql` (basis: profiles/invites/sessions) → `001_tenants.sql` →
 `002_whiteboards.sql` → `003_branding.sql` → `004_billing.sql` → `005_students.sql`
@@ -70,25 +84,29 @@ voor test/live-scheiding — anders werkt Connect lokaal niet), `010_bookings.sq
 availability + bookings + lesson_minutes op organizations) en `011_booking_payment.sql`
 (boeken+betalen: booking_price_cents op organizations + stripe_session_id op bookings).** Tot dan tonen de bijbehorende
 pagina's netjes "nog niet geactiveerd"/leeg (werkt-zonder-migratie).
-Nieuwe migraties: maak `011_*.sql` etc. en laat de GEBRUIKER ze draaien (ik heb
+Nieuwe migraties: maak `012_*.sql` etc. en laat de GEBRUIKER ze draaien (ik heb
 geen Supabase Management-token meer).
 
 **Stripe Connect (Fase 5 — leerlingen betalen docent):** Express-accounts, DIRECTE charges
-op het docent-account (geld op zijn rekening, docent draagt Stripe-kosten, 0% platform-fee).
-Routes: `/api/connect/onboard` + `/status`, `/api/packages/checkout` (publiek) + `/finalize`.
-Publieke betaalpagina `/betalen/[orgId]` + succespagina `/betaald`. Docent regelt het op
-`/tarieven` (Connect-statuskaart + betaallink + "Recente verkopen"). **GEBRUIKER MOET: Stripe
-Connect aanzetten in het Stripe-dashboard (eerst TEST), platform-profiel/branding invullen,
-en 008 draaien.** Aankopen worden afgerond bij terugkeer (`/finalize`) — een Connect-webhook
-(checkout.session.completed) is een latere robuustheids-verbetering (anders blijft een aankoop
-"pending" als de leerling de tab sluit vóór terugkeer).
+op het docent-account (geld op zijn rekening, docent draagt Stripe-kosten, **0% platform-fee**).
+LIVE Connect is door de gebruiker afgerond (platformprofiel + onboarding); echte leerlingbetaling
+werkt. **Test/live-accounts gescheiden** (`stripe_account_id` = live, `stripe_account_id_test` =
+test; migratie 009 + `CONNECT_ACCOUNT_COL` in `lib/stripe/server.ts`), met zelfherstel als een
+opgeslagen account niet in de huidige modus bestaat. Aankopen worden afgerond bij terugkeer
+(`/api/packages/finalize` → `/betaald`) ÉN robuust via de **Connect-webhook** `/api/connect/webhook`
+(checkout.session.completed + async iDEAL) — die bevestigt zowel pakket-aankopen als boekingen.
+**GEBRUIKER MOET NOG: `STRIPE_CONNECT_WEBHOOK_SECRET` in Vercel zetten + de Connect-webhook in
+Stripe aanmaken ("Events on connected accounts")** — zie sectie 9. Zonder webhook werkt betalen
+nog steeds via de terugkeerpagina.
 
 ## 6. Keys & secrets (waar ze staan)
 Alles staat in `bijlesplatform/.env.local` (**gitignored**) én in **Vercel** (production+development):
 - Supabase: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (anon JWT), `SUPABASE_SERVICE_ROLE_KEY` (= `sb_secret_...`)
 - Daily: `NEXT_PUBLIC_DAILY_ROOM_URL` (`https://bijlesplatform.daily.co/Demo_bijles`), `NEXT_PUBLIC_DAILY_DOMAIN`, `DAILY_API_KEY`, `DAILY_WEBHOOK_SECRET`
 - Stripe: `STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PRICE_STARTER/PRO/WHITELABEL`. **Vercel-PRODUCTIE = LIVE-waarden; Vercel-development + `.env.local` = TEST-waarden.** (Zo maak je lokaal nooit echte kosten.)
-- `NEXT_PUBLIC_APP_URL=https://elevatelearning-nine.vercel.app`
+- **Stripe Connect:** `STRIPE_CONNECT_WEBHOOK_SECRET` (aparte webhook-secret voor "Connected accounts"-events; voor leerlingbetalingen). **Nog NIET gezet — zie sectie 9.**
+- **AI (Claude):** `ANTHROPIC_API_KEY` (verplicht voor de AI-laag; zonder = uitgeschakeld), optioneel `ANTHROPIC_MODEL` (default `claude-opus-4-8`; bv. `claude-haiku-4-5` voor lagere kosten). **Nog NIET gezet — zie sectie 9.**
+- `NEXT_PUBLIC_APP_URL=https://elevatelearning-nine.vercel.app` (de Connect/booking-redirects vallen hierop terug, maar gebruiken normaal de request-origin — werkt lokaal én prod).
 
 **REGEL: secrets ALLEEN in `.env.local` + Vercel, NOOIT in `.env.example`** (die staat in git via `!.env.example`-exception). Bij het zetten van een key: assign aan de juiste var-naam, geen losse regels. **Live secrets nooit naar een /tmp-bestand schrijven** (classifier blokkeert dat terecht) — doe key-operaties in één shell-invocatie met de waarde in een variabele/stdin.
 
@@ -118,6 +136,22 @@ na env-wijziging altijd opnieuw deployen.
 - **Werkt-zonder-keys/zonder-migratie patroon:** code degradeert netjes (localStorage-fallback, "niet gekoppeld"-meldingen) i.p.v. crashen.
 
 ## 9. Wat de gebruiker nog moet doen (handmatig)
+**Nieuw / openstaand (jun 2026):**
+- 🔑 **`ANTHROPIC_API_KEY`** zetten (console.anthropic.com) in **`.env.local`** + **Vercel**
+  (production+development) → anders toont de AI-laag "nog niet geactiveerd". Optioneel
+  `ANTHROPIC_MODEL=claude-haiku-4-5` voor lagere kosten.
+- 🔑 **`STRIPE_CONNECT_WEBHOOK_SECRET`** zetten in Vercel (production) + Connect-webhook aanmaken
+  in Stripe (Developers → Webhooks → endpoint `…/api/connect/webhook`, **"Events on connected
+  accounts"**, events `checkout.session.completed` + `async_payment_succeeded` + `_failed`).
+  Zonder dit blijven betalingen werken via de terugkeerpagina, maar de webhook is robuuster.
+- 🧬 **Migraties draaien**: 005–008 zijn gedraaid; **controleer/draai nog `009_connect_test.sql`,
+  `010_bookings.sql`, `011_booking_payment.sql`** in de Supabase SQL-editor (zie sectie 5).
+- 🔀 **PR mergen** naar `main` (branch `fase5-6-groen-crm-connect`) — productie draait er al op,
+  maar `main` loopt achter.
+- ✅ Stripe Connect (LIVE) is door de gebruiker afgerond (platformprofiel + onboarding); echte
+  leerlingbetaling werkt.
+
+**Eerder afgerond:**
 - ✅ Betaalflow in TEST is getest en werkt (bevestigd door gebruiker).
 - ✅ Customer Portal in LIVE-mode geactiveerd (bevestigd door gebruiker, jun 2026). `/api/portal` werkt in productie.
 - **Stripe-activatie helemaal afronden** als er nog stappen open staan (bank/verificatiedocument).
@@ -126,24 +160,48 @@ na env-wijziging altijd opnieuw deployen.
 - **Juridische teksten** door een jurist laten nakijken (sjabloon).
 - Optioneel: oude Supabase-PAT intrekken, Resend-domein verifiëren (e-mail aan iedereen), Vercel-domeinen koppelen voor Djelian/Xiomara.
 
-## 10. Wat is gepland — geprioriteerd op concurrentie-impact
-Volgorde uit `docs/MARKTANALYSE.md` (deep-research jun 2026). Begin bovenaan.
+## 10. Afvink-overzicht — gedaan / nog te doen (jun 2026)
 
-1. **Fase 6 — UI/UX premium-overhaul** ⭐ AANRADER EERST: design system (shadcn/ui + Tailwind + Radix), Revolut-blauw, WCAG 2.2 AA (grote type/contrast/focus voor oudere docenten), multi-step onboarding, mobile-first, vertrouwen-signalen. Reden: tafelgeld vs gepolijste incumbents; eerste indruk + conversie. Bouw hierna alles in deze stijl (niet dubbel).
-2. **White-label echt afmaken:** eigen domein wrijvingsloos live (Vercel-domein koppelen via CLI + DNS-instructie voor klant). Dit is je €129-troef — incumbents (Koala/WizIQ/LearnCube) vragen hiervoor enterprise-prijzen + setup.
-3. **Fase 5 — Docent-dashboard/CRM:** leerling-roster + CRM (voortgangsnotities, contactgeschiedenis), lessenhistorie, aanwezigheid, uren/verbruik-stats. Nieuwe tabellen: `students`, evt. `lesson_attendance`. Pariteit met beheertools + retentie.
-4. **Opname (Daily-recording) op Pro:** laaghangend fruit, Daily ondersteunt het al; concurrenten bieden het als betaalfeature.
-5. **Fase 7 — Booking & rooster:** beschikbaarheids-model + boekingsflow + herinneringen (Resend), óf koppelen met beheertools (integratie-wig).
-6. **Fase 9 — Opdrachten & Voortgang (Xiomara):** vraag-antwoord-game + voortgang, gated op `organizations.features.assignments`. Tabellen `assignments/questions/submissions/answers` (zie SAAS-ARCHITECTURE.md). Differentiatie + AI-haak.
-7. **AI-laag:** huiswerkhulp + transcriptie/les-samenvatting als Premium-module. Sterkste 2026-trend; grootste waarde-uplift.
-8. **Fase 10 — Admin-panel:** beheer docenten/leerlingen, verbruik, refunds.
+### ✅ Gedaan (live in productie)
+- ✅ **MVP klas** (whiteboard + video + chat), **Auth** (invite-gated), **Fase 1-3** (tenants,
+  whiteboards-in-DB, white-label branding), **Fase 4a/4b** (abonnementen + minuten-metering),
+  **Fase 8** (AVG: privacy/voorwaarden/cookies + cookiebanner).
+- ✅ **Fase 6 — UI/UX premium-overhaul** → **GROENE huisstijl** (niet blauw): design system,
+  hero met bewegende objecten, navbar-pill, Plus Jakarta Sans, eigen logo, onboarding-wizard
+  `/welkom`. Alle pagina's + klas-panelen om.
+- ✅ **Fase 5 — Docent-dashboard/CRM:** `/leerlingen` roster + CRM (voortgangsnotities,
+  contactmomenten), lessen↔leerlingen + aanwezigheid, verbruik/stats; **prijs-/pakketbouwer**
+  `/tarieven`; **Stripe Connect** (leerlingen betalen docent direct, 0% fee) — onboarding werkt.
+- ✅ **Fase 7 — Booking & rooster:** `/rooster` (wekelijkse beschikbaarheid + lesduur),
+  publieke `/boeken/[orgId]` (slot kiezen → leslink), én **boeken+betalen** (prijs per les →
+  Connect-checkout). Migraties 010 + 011.
+- ✅ **AI-laag (huiswerkmaatje):** `/ai` — Socratische NL-chat (streaming) + samenvatting/
+  oefenvragen uit lesstof. Claude (`@anthropic-ai/sdk`, opus-4-8). **Key nodig (sectie 9).**
+- ✅ **Connect-webhook** (`/api/connect/webhook`) — code gebouwd (idempotent, async iDEAL),
+  bevestigt pakket-aankopen én boekingen. **Secret nog niet in Vercel → nog niet actief, zie sectie 9.**
 
-~~Fase 8 — AVG/GDPR~~ ✅ AFGEROND (privacy/voorwaarden/cookies + cookiebanner live).
+### ❌ Nog NIET gedaan
+- ❌ **Resend (e-mail)** — **NIET geactiveerd. Er worden NERGENS e-mails verstuurd**: geen
+  boekings-/betaal-bevestigingen, geen herinneringen, geen uitnodigingen. `RESEND_API_KEY`
+  ontbreekt. Eerste logische gebruik: bevestiging + herinnering bij een boeking (Fase 7).
+- ❌ **Lesopname (Daily-recording)** — niet gebouwd. Daily ondersteunt het; laaghangend fruit
+  voor Pro/white-label (concurrenten vragen er geld voor).
+- 🟡 **White-label eigen domein "wrijvingsloos"** — DEELS: branding + `org_domains` + proxy-routing
+  bestaan, maar het **vlot koppelen van een eigen domein** (Vercel-domein via CLI + DNS-instructie
+  voor de klant) is nog niet productieklaar gemaakt. Je €129-troef.
+- ❌ **Fase 9 — Opdrachten & Voortgang (Xiomara)** — quiz/voortgang-module, gated op
+  `organizations.features.assignments`. Tabellen `assignments/questions/submissions/answers`
+  (zie SAAS-ARCHITECTURE.md). Niet gebouwd.
+- ❌ **AI — transcriptie/les-samenvatting uit de échte les** (audio/whiteboard) — alleen de
+  chat + samenvatting-uit-geplakte-tekst is er; transcriptie van de video/les niet.
+- ❌ **Fase 10 — Admin-panel** — beheer docenten/leerlingen, verbruik, refunds. Niet gebouwd.
 
-**Go-to-market (Benelux-first, zie MARKTANALYSE.md):** positioneer als "het Nederlandse, AVG-proof digitale klaslokaal (eigen merk + domein, iDEAL, vanaf €19)"; eerste tractie via design-partners Djelian/Xiomara (casestudy's); integratie-wig met TutorCruncher/Oases/TutorBird; Nederlandse SEO. **Caveat:** "uniek met iDEAL/AVG" is niet bewezen — niet claimen zonder per-concurrent verificatie.
+**Go-to-market (Benelux-first, zie MARKTANALYSE.md):** positioneer als "het Nederlandse,
+AVG-proof digitale klaslokaal (eigen merk + domein, iDEAL, vanaf €19)". **Caveat:** "uniek met
+iDEAL/AVG" is niet bewezen — niet claimen zonder per-concurrent verificatie.
 
 ## 11. Eerste actie in de nieuwe chat
-Lees dit bestand + `docs/MARKTANALYSE.md` + `MEMORY.md`-index (saas-direction,
-daily-cost-protection, bijlesplatform-stack). Aanbevolen volgende stap =
-**Fase 6 (UI/UX premium-overhaul)** — bevestig dit met de gebruiker en start.
-Check ook of de Customer Portal in Stripe LIVE-mode al geactiveerd is (sectie 9).
+Lees dit bestand (vooral het afvink-overzicht in sectie 10) + `MEMORY.md`-index. Voer eerst
+de openstaande gebruikersacties uit sectie 9 uit (o.a. `ANTHROPIC_API_KEY` + Connect-webhook-secret
+in Vercel, PR mergen). Logische volgende bouwfases: **Resend-mails** (boekingsbevestiging/herinnering),
+**lesopname (Daily-recording)**, **white-label eigen domein afmaken**, of **admin-panel (Fase 10)**.
